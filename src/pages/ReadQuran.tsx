@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,22 +8,112 @@ import {
   Pause,
   ChevronLeft,
   BookOpen,
+  Volume2,
+  Loader2,
 } from "lucide-react";
 import {
   fetchSurahs,
   fetchVerses,
   fetchChapterAudio,
+  fetchChapterVerseAudios,
   Surah,
   Verse,
+  Word,
   QURAN_STATS,
+  TRANSLATIONS,
+  getTranslationsByLanguage,
 } from "@/lib/quran-api";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+// Word component with hover tooltip for meaning
+const WordWithMeaning = ({ word }: { word: Word }) => {
+  // Get Arabic text - prefer text_uthmani, fallback to text
+  const arabicText = word.text_uthmani || (word as any).text || "";
+  
+  if (word.char_type_name === "end") {
+    return (
+      <span className="font-arabic text-accent/60 mx-1 text-xl">
+        {arabicText}
+      </span>
+    );
+  }
+
+  return (
+    <Tooltip delayDuration={100}>
+      <TooltipTrigger asChild>
+        <span className="font-arabic text-accent hover:text-primary hover:bg-primary/10 rounded px-1.5 py-1 cursor-help transition-all duration-200 inline-block text-2xl leading-relaxed">
+          {arabicText}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent 
+        side="top" 
+        className="bg-card border-border shadow-xl max-w-xs z-50"
+        sideOffset={8}
+      >
+        <div className="space-y-1.5 p-1">
+          {word.translation && (
+            <p className="text-sm font-medium text-foreground">
+              {word.translation.text}
+            </p>
+          )}
+          {word.transliteration && word.transliteration.text && (
+            <p className="text-xs text-muted-foreground italic">
+              {word.transliteration.text}
+            </p>
+          )}
+        </div>
+      </TooltipContent>
+    </Tooltip>
+  );
+};
+
+// Verse Audio Player
+const VerseAudioButton = ({ 
+  audioUrl, 
+  isPlaying, 
+  isLoading,
+  onPlay, 
+  onPause 
+}: { 
+  audioUrl: string | null;
+  isPlaying: boolean;
+  isLoading: boolean;
+  onPlay: () => void;
+  onPause: () => void;
+}) => {
+  if (!audioUrl) return null;
+
+  return (
+    <Button
+      variant="ghost"
+      size="iconSm"
+      onClick={isPlaying ? onPause : onPlay}
+      className="text-muted-foreground hover:text-primary hover:bg-primary/10"
+      disabled={isLoading}
+    >
+      {isLoading ? (
+        <Loader2 className="w-4 h-4 animate-spin" />
+      ) : isPlaying ? (
+        <Pause className="w-4 h-4" />
+      ) : (
+        <Volume2 className="w-4 h-4" />
+      )}
+    </Button>
+  );
+};
 
 // Surah List View
 const SurahList = () => {
@@ -57,7 +147,6 @@ const SurahList = () => {
 
   return (
     <div className="container mx-auto px-6 py-8">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Read Quran</h1>
         <p className="text-muted-foreground">
@@ -65,7 +154,6 @@ const SurahList = () => {
         </p>
       </div>
 
-      {/* Search */}
       <div className="relative mb-8">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
         <Input
@@ -77,7 +165,6 @@ const SurahList = () => {
         />
       </div>
 
-      {/* Surah Grid */}
       <div className="grid gap-3">
         {filteredSurahs.map((surah, index) => (
           <Link
@@ -114,15 +201,22 @@ const SurahList = () => {
   );
 };
 
-// Surah Reader View
+// Surah Reader View with enhanced features
 const SurahReader = ({ surahId }: { surahId: number }) => {
   const [surah, setSurah] = useState<Surah | null>(null);
   const [verses, setVerses] = useState<Verse[]>([]);
   const [loading, setLoading] = useState(true);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [verseAudios, setVerseAudios] = useState<Map<string, string>>(new Map());
   const [isPlaying, setIsPlaying] = useState(false);
-  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
-  const [translationId, setTranslationId] = useState("131"); // Sahih International
+  const [playingVerseKey, setPlayingVerseKey] = useState<string | null>(null);
+  const [loadingAudio, setLoadingAudio] = useState<string | null>(null);
+  const [translationId, setTranslationId] = useState("131");
+  
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const verseAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const translationsByLanguage = getTranslationsByLanguage();
 
   useEffect(() => {
     const loadData = async () => {
@@ -137,32 +231,84 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
       const audioData = await fetchChapterAudio(surahId);
       setAudioUrl(audioData);
 
+      // Fetch individual verse audios
+      const verseAudioData = await fetchChapterVerseAudios(surahId);
+      setVerseAudios(verseAudioData);
+
       setLoading(false);
     };
     loadData();
   }, [surahId, translationId]);
 
+  // Full surah audio
   useEffect(() => {
     if (audioUrl) {
-      const newAudio = new Audio(audioUrl);
-      newAudio.addEventListener("ended", () => setIsPlaying(false));
-      setAudio(newAudio);
+      audioRef.current = new Audio(audioUrl);
+      audioRef.current.addEventListener("ended", () => setIsPlaying(false));
       return () => {
-        newAudio.pause();
-        newAudio.removeEventListener("ended", () => setIsPlaying(false));
+        audioRef.current?.pause();
+        audioRef.current = null;
       };
     }
   }, [audioUrl]);
 
-  const togglePlay = () => {
-    if (!audio) return;
+  const toggleFullPlay = useCallback(() => {
+    if (!audioRef.current) return;
+    
+    // Stop verse audio if playing
+    if (verseAudioRef.current) {
+      verseAudioRef.current.pause();
+      setPlayingVerseKey(null);
+    }
+
     if (isPlaying) {
-      audio.pause();
+      audioRef.current.pause();
     } else {
-      audio.play();
+      audioRef.current.play();
     }
     setIsPlaying(!isPlaying);
-  };
+  }, [isPlaying]);
+
+  // Play specific verse
+  const playVerse = useCallback((verseKey: string) => {
+    const url = verseAudios.get(verseKey);
+    if (!url) return;
+
+    setLoadingAudio(verseKey);
+
+    // Stop full surah audio if playing
+    if (audioRef.current && isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
+
+    // Stop previous verse if playing
+    if (verseAudioRef.current) {
+      verseAudioRef.current.pause();
+    }
+
+    verseAudioRef.current = new Audio(url);
+    verseAudioRef.current.addEventListener("canplaythrough", () => {
+      setLoadingAudio(null);
+      verseAudioRef.current?.play();
+      setPlayingVerseKey(verseKey);
+    });
+    verseAudioRef.current.addEventListener("ended", () => {
+      setPlayingVerseKey(null);
+    });
+    verseAudioRef.current.addEventListener("error", () => {
+      setLoadingAudio(null);
+      setPlayingVerseKey(null);
+    });
+    verseAudioRef.current.load();
+  }, [verseAudios, isPlaying]);
+
+  const pauseVerse = useCallback(() => {
+    if (verseAudioRef.current) {
+      verseAudioRef.current.pause();
+      setPlayingVerseKey(null);
+    }
+  }, []);
 
   if (loading) {
     return (
@@ -184,7 +330,7 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
   }
 
   return (
-    <div className="container mx-auto px-6 py-8">
+    <div className="container mx-auto px-6 py-8 max-w-5xl">
       {/* Back Button */}
       <Link
         to="/read"
@@ -207,60 +353,122 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
           {surah.translated_name.name} • {surah.verses_count} verses • {surah.revelation_place}
         </p>
 
-        {/* Audio Controls */}
-        <div className="flex items-center justify-center gap-4">
+        {/* Controls */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           {audioUrl && (
             <Button
               variant="hero"
-              size="icon"
-              onClick={togglePlay}
-              className="w-12 h-12 rounded-full"
+              onClick={toggleFullPlay}
+              className="gap-2"
             >
-              {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+              {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              {isPlaying ? "Pause Full Surah" : "Play Full Surah"}
             </Button>
           )}
+          
           <Select value={translationId} onValueChange={setTranslationId}>
-            <SelectTrigger className="w-48 bg-secondary border-border">
+            <SelectTrigger className="w-64 bg-secondary border-border">
               <SelectValue placeholder="Select translation" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="131">Sahih International</SelectItem>
-              <SelectItem value="20">Saheeh International</SelectItem>
-              <SelectItem value="85">Abdul Haleem</SelectItem>
-              <SelectItem value="203">Mustafa Khattab</SelectItem>
+            <SelectContent className="max-h-80">
+              {Object.entries(translationsByLanguage).map(([language, translations]) => (
+                <SelectGroup key={language}>
+                  <SelectLabel className="text-primary font-semibold">{language}</SelectLabel>
+                  {translations.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              ))}
             </SelectContent>
           </Select>
         </div>
+        
+        <p className="text-xs text-muted-foreground mt-4">
+          💡 Hover over any Arabic word to see its meaning
+        </p>
       </div>
 
       {/* Bismillah */}
       {surah.id !== 1 && surah.id !== 9 && (
         <div className="text-center mb-8">
           <p className="quran-verse-large text-accent">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            In the name of Allah, the Most Gracious, the Most Merciful
+          </p>
         </div>
       )}
 
       {/* Verses */}
-      <div className="space-y-6">
-        {verses.map((verse, index) => (
-          <div
-            key={verse.id}
-            className="glass-card p-6 opacity-0 animate-fade-in"
-            style={{ animationDelay: `${index * 50}ms`, animationFillMode: "forwards" }}
-          >
-            <div className="flex items-start gap-4 mb-4">
-              <span className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary shrink-0">
-                {verse.verse_number}
-              </span>
-              <p className="quran-verse flex-1 text-right">{verse.text_uthmani}</p>
+      <div className="space-y-4">
+        {verses.map((verse, index) => {
+          const verseKey = `${surahId}:${verse.verse_number}`;
+          const verseAudioUrl = verseAudios.get(verseKey);
+          const isVersePlayingNow = playingVerseKey === verseKey;
+          const isLoadingThisVerse = loadingAudio === verseKey;
+
+          return (
+            <div
+              key={verse.id}
+              className="glass-card p-5 opacity-0 animate-fade-in group"
+              style={{ animationDelay: `${index * 30}ms`, animationFillMode: "forwards" }}
+            >
+              {/* Verse Header with Number and Audio */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
+                    {verse.verse_number}
+                  </span>
+                  <VerseAudioButton
+                    audioUrl={verseAudioUrl || null}
+                    isPlaying={isVersePlayingNow}
+                    isLoading={isLoadingThisVerse}
+                    onPlay={() => playVerse(verseKey)}
+                    onPause={pauseVerse}
+                  />
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {verseKey}
+                </span>
+              </div>
+
+              {/* Arabic Text with Word-by-Word Hover */}
+              <div className="text-right mb-4 leading-loose">
+                {verse.words && verse.words.length > 0 ? (
+                  <div className="flex flex-wrap justify-end gap-x-1 gap-y-2" dir="rtl">
+                    {verse.words.map((word) => (
+                      <WordWithMeaning key={word.id} word={word} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="quran-verse">{verse.text_uthmani}</p>
+                )}
+              </div>
+
+              {/* Translation at bottom left */}
+              {verse.translations && verse.translations[0] && (
+                <div className="border-t border-border/50 pt-4">
+                  <p className="text-muted-foreground text-sm md:text-base leading-relaxed text-left">
+                    {verse.translations[0].text.replace(/<[^>]*>/g, "")}
+                  </p>
+                </div>
+              )}
             </div>
-            {verse.translations && verse.translations[0] && (
-              <p className="text-muted-foreground text-sm md:text-base leading-relaxed border-t border-border pt-4">
-                {verse.translations[0].text.replace(/<[^>]*>/g, "")}
-              </p>
-            )}
-          </div>
-        ))}
+          );
+        })}
+      </div>
+
+      {/* End of Surah */}
+      <div className="text-center py-12">
+        <p className="text-muted-foreground">End of {surah.name_simple}</p>
+        {surahId < 114 && (
+          <Button asChild variant="hero" className="mt-4">
+            <Link to={`/read/${surahId + 1}`}>
+              Next Surah
+            </Link>
+          </Button>
+        )}
       </div>
     </div>
   );
