@@ -16,24 +16,6 @@ export interface Surah {
   };
 }
 
-export interface Verse {
-  id: number;
-  verse_number: number;
-  verse_key: string;
-  hizb_number: number;
-  rub_el_hizb_number: number;
-  ruku_number: number;
-  manzil_number: number;
-  sajdah_number: number | null;
-  page_number: number;
-  juz_number: number;
-  text_uthmani: string;
-  text_imlaei?: string;
-  words?: Word[];
-  translations?: Translation[];
-  audio?: Audio;
-}
-
 export interface Word {
   id: number;
   position: number;
@@ -51,13 +33,29 @@ export interface Word {
   };
 }
 
+export interface Verse {
+  id: number;
+  verse_number: number;
+  verse_key: string;
+  hizb_number: number;
+  rub_el_hizb_number: number;
+  ruku_number: number;
+  manzil_number: number;
+  sajdah_number: number | null;
+  page_number: number;
+  juz_number: number;
+  text_uthmani: string;
+  text_imlaei?: string;
+  words?: Word[];
+  translations?: Translation[];
+  audio?: {
+    url: string;
+  };
+}
+
 export interface Translation {
   resource_id: number;
   text: string;
-}
-
-export interface Audio {
-  url: string;
 }
 
 export interface Reciter {
@@ -68,6 +66,11 @@ export interface Reciter {
     name: string;
     language_name: string;
   };
+}
+
+export interface AudioFile {
+  url: string;
+  segments?: number[][];
 }
 
 const BASE_URL = "https://api.quran.com/api/v4";
@@ -96,16 +99,17 @@ export const fetchSurah = async (surahNumber: number): Promise<Surah | null> => 
   }
 };
 
-// Fetch verses of a surah with translations
+// Fetch verses of a surah with translations and word data
 export const fetchVerses = async (
   surahNumber: number,
-  translationId: number = 131, // Default: Sahih International
+  translationId: number = 131,
   page: number = 1,
   perPage: number = 50
 ): Promise<{ verses: Verse[]; pagination: any }> => {
   try {
+    // Fetch verses with word-by-word translation and verse translations
     const response = await fetch(
-      `${BASE_URL}/verses/by_chapter/${surahNumber}?language=en&words=true&translations=${translationId}&page=${page}&per_page=${perPage}&fields=text_uthmani`
+      `${BASE_URL}/verses/by_chapter/${surahNumber}?language=en&words=true&word_fields=text_uthmani&translations=${translationId}&fields=text_uthmani&per_page=${perPage}&page=${page}`
     );
     const data = await response.json();
     return {
@@ -118,7 +122,7 @@ export const fetchVerses = async (
   }
 };
 
-// Fetch audio for a verse
+// Fetch audio for a specific verse
 export const fetchVerseAudio = async (
   verseKey: string,
   reciterId: number = 7 // Default: Mishary Rashid Alafasy
@@ -138,7 +142,29 @@ export const fetchVerseAudio = async (
   }
 };
 
-// Fetch chapter audio
+// Fetch all verse audios for a chapter
+export const fetchChapterVerseAudios = async (
+  surahNumber: number,
+  reciterId: number = 7
+): Promise<Map<string, string>> => {
+  const audioMap = new Map<string, string>();
+  try {
+    const response = await fetch(
+      `${BASE_URL}/recitations/${reciterId}/by_chapter/${surahNumber}`
+    );
+    const data = await response.json();
+    if (data.audio_files) {
+      data.audio_files.forEach((file: { verse_key: string; url: string }) => {
+        audioMap.set(file.verse_key, `https://verses.quran.com/${file.url}`);
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching chapter verse audios:", error);
+  }
+  return audioMap;
+};
+
+// Fetch chapter audio (full surah)
 export const fetchChapterAudio = async (
   surahNumber: number,
   reciterId: number = 7
@@ -216,3 +242,103 @@ export const POPULAR_SURAHS = [
   { number: 56, name: "Al-Waqi'ah", arabicName: "الواقعة", verses: 96 },
   { number: 67, name: "Al-Mulk", arabicName: "الملك", verses: 30 },
 ];
+
+// Translation options with languages
+export const TRANSLATIONS = [
+  // English
+  { id: "131", name: "Sahih International", language: "English" },
+  { id: "20", name: "Saheeh International", language: "English" },
+  { id: "85", name: "Abdul Haleem", language: "English" },
+  { id: "203", name: "Mustafa Khattab (Clear Quran)", language: "English" },
+  { id: "84", name: "Mufti Taqi Usmani", language: "English" },
+  { id: "95", name: "Dr. Ghali", language: "English" },
+  { id: "22", name: "Pickthall", language: "English" },
+  { id: "19", name: "Yusuf Ali", language: "English" },
+  
+  // Arabic
+  { id: "78", name: "Tafsir Al-Muyassar", language: "Arabic" },
+  { id: "91", name: "Tafsir Al-Waseet", language: "Arabic" },
+  
+  // Urdu
+  { id: "97", name: "Fateh Muhammad Jalandhry", language: "Urdu" },
+  { id: "234", name: "Abul Ala Maududi", language: "Urdu" },
+  
+  // Bengali
+  { id: "161", name: "Muhiuddin Khan", language: "Bengali" },
+  { id: "163", name: "Taisirul Quran", language: "Bengali" },
+  
+  // Indonesian
+  { id: "33", name: "Indonesian Ministry of Religious Affairs", language: "Indonesian" },
+  
+  // Turkish
+  { id: "77", name: "Diyanet İşleri", language: "Turkish" },
+  { id: "112", name: "Elmalılı Hamdi Yazır", language: "Turkish" },
+  
+  // French
+  { id: "31", name: "Muhammad Hamidullah", language: "French" },
+  { id: "136", name: "Rashid Maash", language: "French" },
+  
+  // German
+  { id: "27", name: "Bubenheim & Elyas", language: "German" },
+  
+  // Spanish
+  { id: "140", name: "Isa Garcia", language: "Spanish" },
+  
+  // Russian
+  { id: "45", name: "Elmir Kuliev", language: "Russian" },
+  { id: "79", name: "Abu Adel", language: "Russian" },
+  
+  // Persian/Farsi
+  { id: "29", name: "Ayatollah Makarem Shirazi", language: "Persian" },
+  
+  // Malay
+  { id: "39", name: "Abdullah Muhammad Basmeih", language: "Malay" },
+  
+  // Hindi
+  { id: "122", name: "Suhel Farooq Khan", language: "Hindi" },
+  
+  // Tamil
+  { id: "229", name: "Jan Trust Foundation", language: "Tamil" },
+  
+  // Chinese
+  { id: "109", name: "Ma Jian", language: "Chinese" },
+  
+  // Japanese
+  { id: "35", name: "Japanese Translation", language: "Japanese" },
+  
+  // Korean
+  { id: "219", name: "Korean Translation", language: "Korean" },
+  
+  // Portuguese
+  { id: "43", name: "Samir El-Hayek", language: "Portuguese" },
+  
+  // Italian
+  { id: "153", name: "Hamza Roberto Piccardo", language: "Italian" },
+  
+  // Dutch
+  { id: "144", name: "Salomo Keyzer", language: "Dutch" },
+  
+  // Somali
+  { id: "46", name: "Abdullahi Yusuf Ali", language: "Somali" },
+  
+  // Swahili
+  { id: "48", name: "Ali Muhsin Al-Barwani", language: "Swahili" },
+  
+  // Thai
+  { id: "211", name: "Thai Translation", language: "Thai" },
+  
+  // Vietnamese
+  { id: "220", name: "Hasan Abdul-Karim", language: "Vietnamese" },
+];
+
+// Group translations by language
+export const getTranslationsByLanguage = () => {
+  const grouped: { [key: string]: typeof TRANSLATIONS } = {};
+  TRANSLATIONS.forEach((t) => {
+    if (!grouped[t.language]) {
+      grouped[t.language] = [];
+    }
+    grouped[t.language].push(t);
+  });
+  return grouped;
+};
