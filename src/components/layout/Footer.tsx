@@ -40,6 +40,7 @@ export const Footer = () => {
             </p>
             <div className="flex items-center gap-3">
               <a
+                target="_blank"
                 href="https://t.me/TadabburOfficial"
                 target="_blank"
                 rel="noreferrer"
@@ -48,6 +49,7 @@ export const Footer = () => {
                 <Send className="w-4 h-4" />
               </a>
               <a
+                target="_blank"
                 href="https://www.instagram.com/risvan_studio/"
                 className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors"
                 aria-label="Instagram"
