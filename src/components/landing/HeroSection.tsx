@@ -1,19 +1,51 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Star, ChevronRight } from "lucide-react";
+import { Star, ChevronRight, User } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const HeroSection = () => {
+  const { user } = useAuth();
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
       {/* Background gradient effects */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-card" />
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-primary/5 rounded-full blur-[120px]" />
-      
-      <div className="relative container mx-auto px-6 text-center">
+
+      {/* Navbar */}
+      <nav className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-3 py-4 md:px-6 md:py-6 container mx-auto">
+        <Link to="/" className="flex items-center gap-2">
+          <div className="w-5 h-5 md:w-8 md:h-8 rounded-lg bg-primary/10 flex items-center justify-center p-1 md:p-1.5 backdrop-blur-sm">
+            <img src="/quran-logo.svg" alt="Tadabbur Logo" className="w-full h-full object-contain" />
+          </div>
+          <span className="font-bold text-sm md:text-xl text-foreground">Tadabbur</span>
+        </Link>
+        <div className="flex items-center gap-4">
+          {user ? (
+            <Button asChild variant="ghost" className="text-foreground hover:bg-secondary/50 gap-2 h-8 px-2 md:h-10 md:px-4">
+              <Link to="/settings">
+                <User className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                <span className="text-xs md:text-base">{user.user_metadata.full_name || "Profile"}</span>
+              </Link>
+            </Button>
+          ) : (
+            <>
+              <Button asChild variant="ghost" className="text-muted-foreground hover:text-foreground h-8 md:h-10 px-2 md:px-4 text-xs md:text-base">
+                <Link to="/login">Log In</Link>
+              </Button>
+              <Button asChild variant="hero" size="sm" className="h-8 md:h-9 text-xs md:text-sm">
+                <Link to="/signup">Sign Up</Link>
+              </Button>
+            </>
+          )}
+        </div>
+      </nav>
+
+      <div className="relative container mx-auto px-6 mt-20 mb-16 md:mt-24 md:mb-24 text-center">
+
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/80 border border-border mb-8 animate-fade-in-down">
-          <Star className="w-4 h-4 text-primary" />
-          <span className="text-sm text-muted-foreground">Your Daily Companion</span>
+        <div className="inline-flex items-center gap-2 px-3 py-1 md:px-4 md:py-2 rounded-full bg-secondary/80 border border-border mb-8 animate-fade-in-down">
+          <Star className="w-3 h-3 md:w-4 md:h-4 text-primary" />
+          <span className="text-xs md:text-sm text-muted-foreground">Your Daily Companion</span>
         </div>
 
         {/* Main heading */}
@@ -25,7 +57,7 @@ export const HeroSection = () => {
         </h2>
 
         {/* Bismillah */}
-        <p className="quran-verse-large text-accent mb-6 animate-fade-in delay-200">
+        <p className="font-arabic text-3xl md:text-5xl lg:text-6xl leading-relaxed md:leading-[1.8] text-accent mb-6 animate-fade-in delay-200">
           بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
         </p>
 
@@ -49,12 +81,6 @@ export const HeroSection = () => {
         </div>
       </div>
 
-      {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-float">
-        <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-2">
-          <div className="w-1.5 h-3 rounded-full bg-primary animate-pulse" />
-        </div>
-      </div>
     </section>
   );
 };

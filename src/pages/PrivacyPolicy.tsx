@@ -1,95 +1,102 @@
-import { Footer } from "@/components/layout/Footer";
-import { Shield } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Shield, Lock, Eye, Server, ChevronLeft } from "lucide-react";
 
 const PrivacyPolicy = () => {
+  const navigate = useNavigate();
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-6 py-8 max-w-3xl">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <Shield className="w-8 h-8 text-primary" />
+    <div className="min-h-screen bg-background pt-24 pb-16">
+      <div className="container mx-auto px-4 md:px-6 max-w-4xl">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back
+        </button>
+
+        <div className="glass-card p-8 md:p-12 animate-fade-in-up">
+          {/* Header */}
+          <div className="mb-12 border-b border-border/50 pb-8">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Privacy Policy</h1>
+            <p className="text-muted-foreground">Last Updated: December 2024</p>
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Privacy Policy</h1>
-          <p className="text-muted-foreground">Last updated: {new Date().toLocaleDateString()}</p>
-        </div>
 
-        {/* Content */}
-        <div className="glass-card p-8 space-y-8">
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">Introduction</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Welcome to Quran. We respect your privacy and are committed to protecting your personal
-              data. This privacy policy explains how we handle information when you use our service.
-            </p>
-          </section>
+          <div className="space-y-10">
+            {/* Introduction */}
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Shield className="w-6 h-6 text-primary" />
+                1. Our Commitment to Privacy
+              </h2>
+              <p className="text-muted-foreground leading-relaxed">
+                At Tadabbur, we consider your privacy a sacred trust. We are dedicated to providing a spiritual environment free from the distractions of data mining and intrusive tracking. We collect only the absolute minimum amount of information necessary to provide you with a seamless experience.
+              </p>
+            </section>
 
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">Information We Collect</h2>
-            <p className="text-muted-foreground leading-relaxed mb-3">
-              We collect minimal information to provide and improve our service:
-            </p>
-            <ul className="space-y-2 text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
-                <span>Reading preferences and progress (stored locally by default)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
-                <span>Account information if you choose to sign up</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
-                <span>Anonymous usage analytics to improve the service</span>
-              </li>
-            </ul>
-          </section>
+            {/* Data Collection */}
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Eye className="w-6 h-6 text-accent" />
+                2. Information We Collect
+              </h2>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                We believe in transparency. Here is exactly what we collect:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                <li>
+                  <strong className="text-foreground">Account Information:</strong> If you sign up, we verify your email address to secure your account.
+                </li>
+                <li>
+                  <strong className="text-foreground">Progress Data:</strong> We store your reading history, bookmarks, and streaks locally or synced to your account so you can pick up where you left off.
+                </li>
+                <li>
+                  <strong className="text-foreground">Preferences:</strong> Your settings for font size, recitation, and theme are saved to enhance your experience.
+                </li>
+              </ul>
+            </section>
 
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">How We Use Your Information</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Your information is used solely to provide and improve your Quran reading experience.
-              We do not sell or share your personal information with third parties for marketing purposes.
-            </p>
-          </section>
+            {/* Data Usage */}
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Server className="w-6 h-6 text-blue-500" />
+                3. How We Use Your Data
+              </h2>
+              <p className="text-muted-foreground leading-relaxed">
+                Your data is used solely for the purpose of maintaining your personal experience on Tadabbur. We do NOT sell, rent, or share your personal data with third-party advertisers or data brokers. Your reading habits are private to you.
+              </p>
+            </section>
 
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">Data Storage</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              By default, your reading progress and preferences are stored locally on your device.
-              If you create an account, your data may be stored securely on our servers to enable
-              syncing across devices.
-            </p>
-          </section>
+            {/* Security */}
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Lock className="w-6 h-6 text-green-500" />
+                4. Data Security
+              </h2>
+              <p className="text-muted-foreground leading-relaxed">
+                We implement industry-standard security measures to protect your information. All data transmission is encrypted. However, please remember that no method of transmission over the internet is 100% secure.
+              </p>
+            </section>
 
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">Cookies</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              We use essential cookies to remember your preferences and provide a better experience.
-              We do not use cookies for tracking or advertising purposes.
-            </p>
-          </section>
+            {/* Cookies */}
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-4">5. Cookies & Local Storage</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                We use local storage and essential cookies only to keep you logged in and remember your preferences. We do not use tracking cookies for cross-site retargeting.
+              </p>
+            </section>
 
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">Your Rights</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              You have the right to access, update, or delete your personal information at any time.
-              Contact us if you wish to exercise these rights.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">Contact Us</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              If you have questions about this Privacy Policy, please contact us at{" "}
-              <a href="mailto:privacy@quran.app" className="text-primary hover:underline">
-                privacy@quran.app
-              </a>
-            </p>
-          </section>
+            {/* Contact */}
+            <div className="bg-secondary/20 rounded-xl p-6 mt-8">
+              <h3 className="font-semibold text-foreground mb-2">Have Questions?</h3>
+              <p className="text-muted-foreground text-sm">
+                If you have any questions about our privacy practices, please contact us at <a href="mailto:privacy@tadabbur.com" className="text-primary hover:underline">privacy@tadabbur.com</a>.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
-      <Footer />
     </div>
   );
 };

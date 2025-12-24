@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Aref+Ruqaa:wght@400;700&family=Cairo:wght@300;400;500;600;700&family=Lateef&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Scheherazade+New:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -60,6 +60,10 @@
     --sidebar-border: 230 10% 15%;
     --sidebar-ring: 210 35% 55%;
 
+    /* Fonts */
+    --font-quran: 'Amiri', serif;
+    /* Default Quran Font */
+
     /* Custom semantic tokens */
     --surface-elevated: 230 12% 13%;
     --surface-glass: 230 15% 10%;
@@ -69,7 +73,7 @@
     --gradient-surface: linear-gradient(180deg, hsl(230 15% 10%), hsl(230 15% 6%));
     --shadow-glow: 0 0 40px hsl(210 35% 55% / 0.15);
     --shadow-soft: 0 4px 24px hsl(0 0% 0% / 0.3);
-    
+
     /* CTA Blue banner */
     --cta-background: 210 35% 55%;
     --cta-foreground: 230 20% 15%;
@@ -151,16 +155,19 @@
 
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', system-ui, sans-serif;
+    overflow-x: hidden;
+    width: 100%;
   }
 
   /* Arabic text styling */
   .font-arabic {
-    font-family: 'Amiri', serif;
+    font-family: var(--font-quran);
     direction: rtl;
     line-height: 2;
   }
@@ -169,7 +176,7 @@
   .quran-verse {
     font-family: 'Amiri', serif;
     direction: rtl;
-    line-height: 2.2;
+    line-height: 4;
     font-size: 1.75rem;
     color: hsl(var(--text-arabic));
   }
@@ -184,6 +191,7 @@
 }
 
 @layer components {
+
   /* Glass card effect */
   .glass-card {
     @apply bg-card/80 backdrop-blur-md border border-border/50 rounded-xl;
@@ -283,6 +291,7 @@
 }
 
 @layer utilities {
+
   /* Smooth fade in animation */
   .animate-fade-in {
     animation: fadeIn 0.6s ease-out forwards;
@@ -309,17 +318,35 @@
   }
 
   /* Stagger delays */
-  .delay-100 { animation-delay: 100ms; }
-  .delay-200 { animation-delay: 200ms; }
-  .delay-300 { animation-delay: 300ms; }
-  .delay-400 { animation-delay: 400ms; }
-  .delay-500 { animation-delay: 500ms; }
-  .delay-600 { animation-delay: 600ms; }
+  .delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .delay-500 {
+    animation-delay: 500ms;
+  }
+
+  .delay-600 {
+    animation-delay: 600ms;
+  }
 
   /* Hover lift effect */
   .hover-lift {
     @apply transition-transform duration-300;
   }
+
   .hover-lift:hover {
     transform: translateY(-4px);
   }
@@ -337,8 +364,13 @@
 
 /* Keyframe animations */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes fadeInUp {
@@ -346,6 +378,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -357,6 +390,7 @@
     opacity: 0;
     transform: translateY(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -368,6 +402,7 @@
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -379,6 +414,7 @@
     opacity: 0;
     transform: translateX(-20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -390,6 +426,7 @@
     opacity: 0;
     transform: translateX(20px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -397,36 +434,79 @@
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px hsl(210 35% 55% / 0.2); }
-  50% { box-shadow: 0 0 40px hsl(210 35% 55% / 0.4); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px hsl(210 35% 55% / 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 40px hsl(210 35% 55% / 0.4);
+  }
 }
 
-/* Scrollbar styling */
+/* Scrollbar Styling */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--background));
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted));
-  border-radius: 4px;
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground));
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Night Mode (Eye Comfort) Overlay */
+body.night-mode::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 160, 0, 0.2);
+  /* Warm amber overlay */
+  pointer-events: none;
+  z-index: 9999;
+  mix-blend-mode: multiply;
+  transition: background 0.3s ease;
+}
+
+/* Ensure overlay works in dark mode too where multiply might be too dark,
+   so we assume 'multiply' works well for reducing blue, but maybe 'overlay' or just normal with low opacity is safer for guaranteed visibility without crushing blacks too much.
+   Let's stick to a simple warm tint.
+*/
+.dark body.night-mode::after {
+  background: rgba(255, 140, 0, 0.1);
+  mix-blend-mode: normal;
+  /* In dark mode, multiply might hide it. Normal tint is safer. */
 }
 
 /* Selection color */
 ::selection {
   background: hsl(var(--primary) / 0.3);
   color: hsl(var(--foreground));
+}
+
+/* Time Input Icon Styling - Force Blue Color */
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(44%) sepia(87%) saturate(2252%) hue-rotate(172deg) brightness(91%) contrast(101%);
+  cursor: pointer;
 }

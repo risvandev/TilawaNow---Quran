@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
-import { BookOpen, Github, Twitter, Heart } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { BookOpen, Heart, Instagram, Send } from "lucide-react";
 
 const footerLinks = {
   product: [
@@ -19,12 +19,15 @@ const footerLinks = {
 };
 
 export const Footer = () => {
+  const location = useLocation();
+  const isLanding = location.pathname === "/";
+
   return (
     <footer className="bg-card border-t border-border">
       <div className="container mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
-          <div className="lg:col-span-1">
+          <div className="col-span-2 md:col-span-1 lg:col-span-1">
             <Link to="/" className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
                 <BookOpen className="w-6 h-6 text-primary-foreground" />
@@ -37,16 +40,19 @@ export const Footer = () => {
             </p>
             <div className="flex items-center gap-3">
               <a
-                href="#"
+                href="https://t.me/TadabburOfficial"
+                target="_blank"
+                rel="noreferrer"
                 className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors"
               >
-                <Twitter className="w-4 h-4" />
+                <Send className="w-4 h-4" />
               </a>
               <a
                 href="#"
                 className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors"
+                aria-label="Instagram"
               >
-                <Github className="w-4 h-4" />
+                <Instagram className="w-4 h-4" />
               </a>
             </div>
           </div>
@@ -59,6 +65,7 @@ export const Footer = () => {
                 <li key={link.href}>
                   <Link
                     to={link.href}
+                    state={isLanding ? { fromLanding: true } : undefined}
                     className="text-muted-foreground hover:text-foreground transition-colors text-sm"
                   >
                     {link.label}
@@ -76,6 +83,7 @@ export const Footer = () => {
                 <li key={link.href}>
                   <Link
                     to={link.href}
+                    state={isLanding ? { fromLanding: true } : undefined}
                     className="text-muted-foreground hover:text-foreground transition-colors text-sm"
                   >
                     {link.label}
@@ -93,6 +101,7 @@ export const Footer = () => {
                 <li key={link.href}>
                   <Link
                     to={link.href}
+                    state={isLanding ? { fromLanding: true } : undefined}
                     className="text-muted-foreground hover:text-foreground transition-colors text-sm"
                   >
                     {link.label}
@@ -104,11 +113,11 @@ export const Footer = () => {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
           <p className="text-muted-foreground text-sm">
             © {new Date().getFullYear()} Quran. Free forever, for everyone.
           </p>
-          <p className="text-muted-foreground text-sm flex items-center gap-1">
+          <p className="text-muted-foreground text-sm flex items-center gap-1 justify-center md:justify-start">
             Made with <Heart className="w-4 h-4 text-destructive fill-destructive" /> for the Ummah
           </p>
         </div>

@@ -49,16 +49,16 @@ export const QuickStartSection = () => {
               {index < steps.length - 1 && (
                 <div className="hidden md:block absolute top-12 left-[60%] w-[80%] h-px bg-gradient-to-r from-primary/50 to-transparent" />
               )}
-              
+
               <div className="relative inline-flex items-center justify-center mb-6">
-                <div className="w-24 h-24 rounded-full bg-secondary border border-border flex items-center justify-center">
-                  <item.icon className="w-10 h-10 text-primary" />
+                <div className="w-16 h-16 md:w-24 md:h-24 rounded-full bg-secondary border border-border flex items-center justify-center">
+                  <item.icon className="w-6 h-6 md:w-10 md:h-10 text-primary" />
                 </div>
-                <span className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-6 h-6 md:w-8 md:h-8 rounded-full bg-primary text-primary-foreground text-xs md:text-sm font-bold flex items-center justify-center">
                   {item.step}
                 </span>
               </div>
-              
+
               <h3 className="text-xl font-semibold text-foreground mb-2">{item.title}</h3>
               <p className="text-muted-foreground">{item.description}</p>
             </div>

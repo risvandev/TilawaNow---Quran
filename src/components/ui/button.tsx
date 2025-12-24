@@ -22,8 +22,8 @@ const buttonVariants = cva(
         // CTA button for blue sections
         cta: "bg-card text-foreground rounded-full hover:bg-card/90 shadow-lg hover:shadow-xl hover:-translate-y-0.5",
         // Sidebar navigation
-        sidebar: "w-full justify-start bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-lg",
-        sidebarActive: "w-full justify-start bg-sidebar-accent text-primary border-l-2 border-primary rounded-lg",
+        sidebar: "w-full justify-start bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-lg transition-all duration-200",
+        sidebarActive: "w-full justify-start bg-sidebar-accent text-primary shadow-[inset_3px_0_0_0_theme(colors.primary.DEFAULT)] rounded-lg transition-all duration-200",
       },
       size: {
         default: "h-10 px-4 py-2",
@@ -44,7 +44,7 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
 

@@ -1,117 +1,94 @@
-import { Footer } from "@/components/layout/Footer";
-import { FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { FileText, AlertCircle, CheckCircle, ChevronLeft } from "lucide-react";
 
 const TermsConditions = () => {
+  const navigate = useNavigate();
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-6 py-8 max-w-3xl">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <FileText className="w-8 h-8 text-primary" />
+    <div className="min-h-screen bg-background pt-24 pb-16">
+      <div className="container mx-auto px-4 md:px-6 max-w-4xl">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back
+        </button>
+
+        <div className="glass-card p-8 md:p-12 animate-fade-in-up">
+          {/* Header */}
+          <div className="mb-12 border-b border-border/50 pb-8">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Terms of Service</h1>
+            <p className="text-muted-foreground">Last Updated: December 2024</p>
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Terms & Conditions</h1>
-          <p className="text-muted-foreground">Last updated: {new Date().toLocaleDateString()}</p>
-        </div>
 
-        {/* Content */}
-        <div className="glass-card p-8 space-y-8">
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">Acceptance of Terms</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              By accessing and using this Quran platform, you accept and agree to be bound by these
-              Terms and Conditions. If you do not agree, please do not use the service.
-            </p>
-          </section>
+          <div className="space-y-10">
+            {/* Acceptance */}
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                <CheckCircle className="w-6 h-6 text-primary" />
+                1. Acceptance of Terms
+              </h2>
+              <p className="text-muted-foreground leading-relaxed">
+                By accessing and using Tadabbur, you agree to be bound by these Terms of Service. These terms apply to all visitors, users, and others who access the service. If you disagree with any part of the terms, you may not access the service.
+              </p>
+            </section>
 
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">Use of Service</h2>
-            <p className="text-muted-foreground leading-relaxed mb-3">
-              This platform is provided for personal, non-commercial use to:
-            </p>
-            <ul className="space-y-2 text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
-                <span>Read and study the Holy Quran</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
-                <span>Listen to Quran recitations</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
-                <span>Access translations and understand meanings</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
-                <span>Track personal reading progress</span>
-              </li>
-            </ul>
-          </section>
+            {/* Use License */}
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                <FileText className="w-6 h-6 text-accent" />
+                2. Use of Service
+              </h2>
+              <p className="text-muted-foreground leading-relaxed mb-4">
+                Tadabbur is provided for personal, spiritual, and educational use. You agree not to:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                <li>Use the service for any illegal purpose or to violate any laws in your jurisdiction.</li>
+                <li>Attempt to gain unauthorized access to any portion of the service or its systems.</li>
+                <li>Harass, abuse, or harm another person or group.</li>
+                <li>Spam or flood the service with excessive requests.</li>
+              </ul>
+            </section>
 
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">Content Accuracy</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              We strive to ensure the accuracy of Quranic text, translations, and audio. However, for
-              religious guidance and rulings, please consult qualified Islamic scholars. Translations
-              are interpretations and may not capture the full depth of the Arabic original.
-            </p>
-          </section>
+            {/* Content & Copyright */}
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-4">3. Content & Copyright</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                The Quranic text and audio provided on this platform are public domain or used with permission from their respective sources. The design, code, and unique features of Tadabbur are copyright of the Tadabbur team.
+              </p>
+            </section>
 
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">Intellectual Property</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              The Quran is the word of Allah and is not subject to copyright. Translations and audio
-              recitations are provided through the Quran.com API and remain the property of their
-              respective creators. Our platform design and code are our intellectual property.
-            </p>
-          </section>
+            {/* Disclaimer */}
+            <section>
+              <h2 className="text-2xl font-semibold text-foreground mb-4 flex items-center gap-2">
+                <AlertCircle className="w-6 h-6 text-orange-500" />
+                4. Disclaimer
+              </h2>
+              <p className="text-muted-foreground leading-relaxed">
+                While we strive for accuracy in the Quranic text and translations, Tadabbur is a human effort and may contain errors. If you find any errors in the text or audio, please report them so we can correct them immediately. We are not liable for any misunderstandings arising from the use of translations.
+              </p>
+            </section>
 
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">User Conduct</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              Users agree to use this platform respectfully and in accordance with Islamic values.
-              Any misuse, including but not limited to attempting to modify Quranic content or using
-              the service for harmful purposes, is strictly prohibited.
-            </p>
-          </section>
+            {/* Changes */}
+            <section>
+              <h2 className="text-xl font-semibold text-foreground mb-4">5. Changes to Terms</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                We reserve the right to modify or replace these Terms at any time. We will try to provide at least 30 days' notice prior to any new terms taking effect.
+              </p>
+            </section>
 
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">Service Availability</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              We strive to keep the service available at all times but cannot guarantee uninterrupted
-              access. We reserve the right to modify or discontinue features without notice.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">Limitation of Liability</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              This service is provided "as is" without warranties of any kind. We are not liable for
-              any damages arising from the use of this platform.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">Changes to Terms</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              We may update these terms from time to time. Continued use of the service after changes
-              constitutes acceptance of the new terms.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold text-foreground mb-3">Contact</h2>
-            <p className="text-muted-foreground leading-relaxed">
-              For questions about these Terms, contact us at{" "}
-              <a href="mailto:legal@quran.app" className="text-primary hover:underline">
-                legal@quran.app
-              </a>
-            </p>
-          </section>
+            {/* Contact */}
+            <div className="bg-secondary/20 rounded-xl p-6 mt-8">
+              <h3 className="font-semibold text-foreground mb-2">Contact Us</h3>
+              <p className="text-muted-foreground text-sm">
+                If you have any questions about these Terms, please contact us at <a href="mailto:support@tadabbur.com" className="text-primary hover:underline">support@tadabbur.com</a>.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
-      <Footer />
     </div>
   );
 };

@@ -1,12 +1,15 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, Send, MessageSquare, CheckCircle } from "lucide-react";
+import { Mail, Send, MessageSquare, CheckCircle, Heart, ChevronLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import emailjs from "@emailjs/browser";
 import { Footer } from "@/components/layout/Footer";
 
 const Contact = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
@@ -21,15 +24,64 @@ const Contact = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      // 1. Send Admin Notification
+      try {
+        await emailjs.send(
+          import.meta.env.VITE_EMAILJS_SERVICE_ID,
+          import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+          {
+            from_name: formData.name,
+            from_email: formData.email,
+            subject: formData.subject,
+            message: formData.message,
+            to_name: "Tadabbur Team",
+            submitted_at: new Date().toLocaleString(),
+          },
+          import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+        );
+      } catch (adminError: any) {
+        console.error("Admin Email Failed:", adminError);
+        throw new Error(`Admin Email Failed: ${adminError?.text || "Unknown error"}`);
+      }
 
-    setIsSubmitting(false);
-    setSubmitted(true);
-    toast({
-      title: "Message sent!",
-      description: "We'll get back to you as soon as possible.",
-    });
+      // 2. Send User Auto-Reply (Confirmation)
+      if (import.meta.env.VITE_EMAILJS_AUTO_REPLY_TEMPLATE_ID) {
+        try {
+          await emailjs.send(
+            import.meta.env.VITE_EMAILJS_SERVICE_ID,
+            import.meta.env.VITE_EMAILJS_AUTO_REPLY_TEMPLATE_ID,
+            {
+              to_name: formData.name,
+              to_email: formData.email,
+              subject: "We received your message - Tadabbur",
+              message_preview: formData.message.substring(0, 50) + "...",
+              submitted_at: new Date().toLocaleString(),
+            },
+            import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+          );
+        } catch (replyError) {
+          console.warn("Auto-reply failed (non-critical):", replyError);
+          // Don't stop the success flow for auto-reply failure
+        }
+      }
+
+      setSubmitted(true);
+      toast({
+        title: "Message sent!",
+        description: "We'll get back to you as soon as possible.",
+      });
+      setFormData({ name: "", email: "", subject: "", message: "" });
+    } catch (error: any) {
+      console.error("Submission Error:", error);
+      toast({
+        variant: "destructive",
+        title: "Failed to send",
+        description: error.message || "Please check your connection.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -42,6 +94,15 @@ const Contact = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-6 py-8 max-w-4xl">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 -ml-4 pl-4 transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back
+        </button>
+
         {/* Header */}
         <div className="text-center mb-12">
           <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
@@ -163,12 +224,7 @@ const Contact = () => {
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => {
-                  toast({
-                    title: "Feedback Form",
-                    description: "Use the contact form to submit your feedback!",
-                  });
-                }}
+                onClick={() => window.open("https://forms.gle/YourFeedbackFormLink", "_blank")}
               >
                 <MessageSquare className="w-4 h-4 mr-2" />
                 Submit Feedback
@@ -183,6 +239,24 @@ const Contact = () => {
                 "URGENT" in your subject line.
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* Support / Donation Section */}
+        <div className="glass-card p-8 mt-8 text-center bg-gradient-to-br from-primary/10 via-transparent to-transparent">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+            <Heart className="w-8 h-8 text-primary fill-primary/20" />
+          </div>
+          <h2 className="text-2xl font-bold text-foreground mb-3">Support Tadabbur</h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-8 leading-relaxed">
+            This platform is built and maintained voluntarily to help people read and understand the Qur’an. If you find it beneficial and wish to support its development or future improvements, you may do so voluntarily.
+            <br /><br />
+            Access to the Qur’an will <strong className="text-foreground">always remain free forever</strong>.
+          </p>
+          <div className="flex justify-center">
+            <Button variant="hero" size="lg" className="min-w-[200px]" onClick={() => window.open("https://www.buymeacoffee.com", "_blank")}>
+              Donate Now
+            </Button>
           </div>
         </div>
       </div>
