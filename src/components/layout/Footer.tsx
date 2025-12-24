@@ -40,7 +40,6 @@ export const Footer = () => {
             </p>
             <div className="flex items-center gap-3">
               <a
-                target="_blank"
                 href="https://t.me/TadabburOfficial"
                 target="_blank"
                 rel="noreferrer"
