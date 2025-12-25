@@ -17,8 +17,8 @@ export default defineConfig(({ mode }) => ({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'Tadabbur - Your Daily Quran Companion',
-        short_name: 'Tadabbur',
+        name: 'TilawaNow - Your Daily Quran Companion',
+        short_name: 'TilawaNow',
         description: 'Track your Quran reading journey with AI assistance and daily goals.',
         theme_color: '#09090b',
         background_color: '#09090b',

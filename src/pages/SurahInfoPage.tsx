@@ -33,9 +33,7 @@ const SurahInfoPage = () => {
                     const rawText = rawData?.text || "";
 
                     // 2. AI Structure
-                    const apiKey = import.meta.env.VITE_QURAN_AI_API_KEY;
-                    if (apiKey) {
-                        const systemPrompt = `You are a Quran scholar.
+                    const systemPrompt = `You are a Quran scholar.
             The user wants information about Surah ${surahData.name_simple} (${surahData.name_arabic}).
             
             Source Text from Quran.com (STRICTLY USE THIS SOURCE ONLY):
@@ -55,24 +53,16 @@ const SurahInfoPage = () => {
             { "snapshot": "...", "context": "...", "tafsir": "..." }
             Return ONLY the JSON.`;
 
-                        const response = await chatWithAI([{ role: "system", content: systemPrompt }], apiKey);
-
-                        try {
-                            const cleaned = response.replace(/```json/g, "").replace(/```/g, "").trim();
-                            setInfo(JSON.parse(cleaned));
-                        } catch (e) {
-                            // Fallback
-                            setInfo({
-                                snapshot: `${surahData.revelation_place} Surah, ${surahData.verses_count} Verses.`,
-                                context: "Context details unavailable.",
-                                tafsir: rawText.substring(0, 200) + "..."
-                            });
-                        }
-                    } else {
+                    try {
+                        const response = await chatWithAI([{ role: "system", content: systemPrompt }]);
+                        const cleaned = response.replace(/```json/g, "").replace(/```/g, "").trim();
+                        setInfo(JSON.parse(cleaned));
+                    } catch (e) {
+                        // Fallback
                         setInfo({
-                            snapshot: `${surahData.revelation_place} Surah`,
-                            context: "AI Key Missing",
-                            tafsir: rawText
+                            snapshot: `${surahData.revelation_place} Surah, ${surahData.verses_count} Verses.`,
+                            context: "Context details unavailable.",
+                            tafsir: rawText.substring(0, 200) + "..."
                         });
                     }
                 }

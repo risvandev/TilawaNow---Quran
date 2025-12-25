@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Star, ChevronRight, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Logo } from "@/components/Logo";
 
 export const HeroSection = () => {
   const { user } = useAuth();
@@ -13,11 +14,12 @@ export const HeroSection = () => {
 
       {/* Navbar */}
       <nav className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-3 py-4 md:px-6 md:py-6 container mx-auto">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-5 h-5 md:w-8 md:h-8 rounded-lg bg-primary/10 flex items-center justify-center p-1 md:p-1.5 backdrop-blur-sm">
-            <img src="/quran-logo.svg" alt="Tadabbur Logo" className="w-full h-full object-contain" />
-          </div>
-          <span className="font-bold text-sm md:text-xl text-foreground">Tadabbur</span>
+        <Link to="/">
+          <Logo
+            className="gap-2"
+            iconClassName="w-5 h-5 md:w-8 md:h-8 p-1 md:p-1.5"
+            textClassName="font-bold text-sm md:text-xl text-foreground"
+          />
         </Link>
         <div className="flex items-center gap-4">
           {user ? (

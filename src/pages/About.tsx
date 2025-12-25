@@ -38,11 +38,11 @@ const About = () => {
         {/* Hero Section */}
         <div className="text-center mb-16 animate-fade-in-up">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-            About <span className="text-primary">Tadabbur</span>
+            About <span className="text-primary">TilawaNow</span>
           </h1>
           <div className="w-24 h-1 bg-primary mx-auto rounded-full mb-8" />
           <p className="text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
-            Tadabbur is a modern, privacy-focused platform designed to make connecting with the Holy Quran effortless, accessible, and spiritually enriching for everyone, everywhere.
+            TilawaNow is a modern, privacy-focused platform designed to make connecting with the Holy Quran effortless, accessible, and spiritually enriching for everyone, everywhere.
           </p>
         </div>
 
@@ -123,7 +123,7 @@ const About = () => {
             Built with <Heart className="w-6 h-6 text-red-500 fill-red-500" /> by the Community
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
-            Tadabbur is a passion project built by developers who believe in making Islamic resources open and high-quality. We are constantly improving and adding new features.
+            TilawaNow is a passion project built by developers who believe in making Islamic resources open and high-quality. We are constantly improving and adding new features.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-muted-foreground">

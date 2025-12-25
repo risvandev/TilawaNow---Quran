@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -68,9 +69,9 @@ const faqs = [
 import { chatWithAI, ChatMessage } from "@/lib/ai-service";
 import { useToast } from "@/hooks/use-toast";
 
-const SITE_SUPPORT_PROMPT = `SYSTEM PROMPT — Tadabbur Support Guide
+const SITE_SUPPORT_PROMPT = `SYSTEM PROMPT — TilawaNow Support Guide
 
-You are the dedicated Support Assistant for "Tadabbur", a premium Quran engagement platform.
+You are the dedicated Support Assistant for "TilawaNow", a premium Quran engagement platform.
 Your SOLE responsibility is to assist users with using the website, configuring settings, and troubleshooting feature issues.
 
 PRINCIPLE: You are a Technical Guide, not a Sheikh. Do not interpret the Quran. Focus on the PLATFORM.
@@ -98,9 +99,9 @@ PRINCIPLE: You are a Technical Guide, not a Sheikh. Do not interpret the Quran. 
 
 3) REFUSAL & REDIRECTION (CRITICAL)
 - **RELIGIOUS QUESTIONS**: If a user asks for Tafsir, Fatwa, or Islamic Ruling:
-  - *Response*: "I help with website settings and features. For Quranic knowledge, please use our **Tadabbur AI** (Quran Assistant) on the main page. 📖"
+  - *Response*: "I help with website settings and features. For Quranic knowledge, please use our **TilawaNow AI** (Quran Assistant) on the main page. 📖"
 - **OFF-TOPIC**: If a user asks about math, news, or general code:
-  - *Response*: "I am specialized only in Tadabbur platform support. How can I help you regarding our website settings? ⚙️"
+  - *Response*: "I am specialized only in TilawaNow platform support. How can I help you regarding our website settings? ⚙️"
 
 4) STRUCTURE & TONE
 - **Tone**: Professional, technical but simplified, friendly (Customer Support style).
@@ -115,7 +116,7 @@ PRINCIPLE: You are a Technical Guide, not a Sheikh. Do not interpret the Quran. 
 
 6) UNKNOWN ISSUES
 - If a user reports a bug you don't know:
-  - "I'm sorry you're facing this. Please try refreshing the page. If the issue persists, you can email our dev team at support@tadabbur.com."
+  - "I'm sorry you're facing this. Please try refreshing the page. If the issue persists, you can email our dev team at support@tilawanow.com."
 
 END OF SYSTEM PROMPT`;
 
@@ -154,11 +155,6 @@ const HelpSupport = () => {
     setIsLoading(true);
 
     try {
-      const apiKey = import.meta.env.VITE_SITE_AI_API_KEY;
-      if (!apiKey) {
-        throw new Error("Site Support AI is not configured. please check API keys.");
-      }
-
       const systemMessage: ChatMessage = { role: "system", content: SITE_SUPPORT_PROMPT };
 
       // Append safety constraint to the last message
@@ -171,14 +167,14 @@ const HelpSupport = () => {
           if (index === lastIndex && msg.role === "user") {
             return {
               ...msg,
-              content: msg.content + "\n\n[SYSTEM INSTRUCTION: Answer ONLY if related to Tadabbur settings/features. If religious/off-topic, REFUSE/REDIRECT.]"
+              content: msg.content + "\n\n[SYSTEM INSTRUCTION: Answer ONLY if related to TilawaNow settings/features. If religious/off-topic, REFUSE/REDIRECT.]"
             };
           }
           return msg;
         })
       ];
 
-      const responseContent = await chatWithAI(apiMessages, apiKey);
+      const responseContent = await chatWithAI(apiMessages);
 
       setChatMessages(prev => [...prev, { role: "assistant", content: responseContent }]);
 
@@ -200,7 +196,7 @@ const HelpSupport = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-6 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 md:px-6 py-6 md:py-8 max-w-4xl">
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
@@ -211,12 +207,12 @@ const HelpSupport = () => {
         </button>
 
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-8 md:mb-12">
           <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
             <HelpCircle className="w-8 h-8 text-primary" />
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Help & Support</h1>
-          <p className="text-muted-foreground">Find answers or chat with our support assistant</p>
+          <p className="text-muted-foreground text-sm md:text-base">Find answers or chat with our support assistant</p>
         </div>
 
         {/* Search FAQs */}
@@ -259,7 +255,7 @@ const HelpSupport = () => {
       <Sheet>
         <SheetTrigger asChild>
           <button
-            className="fixed bottom-20 md:bottom-6 right-6 z-50 p-3 md:p-4 bg-primary text-primary-foreground rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center justify-center group"
+            className="fixed bottom-24 md:bottom-6 right-6 z-50 p-3 md:p-4 bg-primary text-primary-foreground rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center justify-center group"
           >
             <Sparkles className="w-5 h-5 md:w-6 md:h-6 animate-pulse" />
             <span className="absolute right-full mr-3 bg-card text-foreground px-2 py-1 rounded text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md pointer-events-none">
@@ -267,7 +263,7 @@ const HelpSupport = () => {
             </span>
           </button>
         </SheetTrigger>
-        <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col p-6">
+        <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col p-4 md:p-6 h-[100dvh]">
           <SheetHeader className="mb-4">
             <SheetTitle className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" />
@@ -278,14 +274,18 @@ const HelpSupport = () => {
             </SheetDescription>
           </SheetHeader>
 
-          <div className="flex-1 flex flex-col min-h-0 bg-secondary/30 rounded-3xl p-4 mb-4">
+          <div className="flex-1 flex flex-col min-h-0 bg-secondary/30 rounded-3xl p-3 md:p-4 mb-4">
             <div className="flex-1 overflow-y-auto space-y-3 mb-4 pr-2">
               <div className="flex gap-2 justify-start">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                   <Bot className="w-5 h-5 text-primary" />
                 </div>
-                <div className="bg-secondary text-foreground rounded-3xl rounded-tl-none px-4 py-3 text-sm max-w-[85%] shadow-sm">
-                  Hi! I'm your **Tadabbur** Support Guide. I can help you with app settings, features, and how to use the platform. What would you like to know?
+                <div className="bg-secondary text-foreground rounded-3xl rounded-tl-none px-4 py-3 text-sm max-w-[85%] shadow-sm leading-relaxed">
+                  <ReactMarkdown components={{
+                    strong: ({ node, ...props }) => <span className="font-semibold text-primary" {...props} />
+                  }}>
+                    {"Hi! I'm your **TilawaNow** Support Guide. I can help you with app settings, features, and how to use the platform. What would you like to know?"}
+                  </ReactMarkdown>
                 </div>
               </div>
 
@@ -300,18 +300,25 @@ const HelpSupport = () => {
                     </div>
                   )}
                   <div
-                    className={`max-w-[85%] rounded-3xl px-4 py-3 text-sm shadow-sm ${message.role === "user"
+                    className={`max-w-[85%] rounded-3xl px-4 py-3 text-sm shadow-sm leading-relaxed ${message.role === "user"
                       ? "bg-primary text-primary-foreground rounded-tr-none"
                       : "bg-secondary text-foreground rounded-tl-none"
                       }`}
                   >
-                    {message.content}
+                    <ReactMarkdown components={{
+                      strong: ({ node, ...props }) => <span className="font-semibold text-primary" {...props} />,
+                      p: ({ node, ...props }) => <span {...props} />
+                    }}>
+                      {message.content}
+                    </ReactMarkdown>
                   </div>
-                  {message.role === "user" && (
-                    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0">
-                      <User className="w-5 h-5 text-foreground" />
-                    </div>
-                  )}
+                  {
+                    message.role === "user" && (
+                      <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0">
+                        <User className="w-5 h-5 text-foreground" />
+                      </div>
+                    )
+                  }
                 </div>
               ))}
               {isLoading && (
@@ -330,7 +337,7 @@ const HelpSupport = () => {
               )}
             </div>
 
-            <div className="flex gap-2 mt-auto">
+            <div className="flex gap-2 mt-auto pb-8 md:pb-2">
               <Input
                 placeholder="Type a message..."
                 value={chatInput}
@@ -338,16 +345,16 @@ const HelpSupport = () => {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") handleSendMessage();
                 }}
-                className="bg-background border-border rounded-2xl px-4"
+                className="bg-background border-border rounded-2xl px-4 h-11 focus-visible:ring-primary/20"
               />
-              <Button variant="hero" size="icon" onClick={handleSendMessage} disabled={isLoading} className="rounded-2xl w-10 h-10">
+              <Button variant="default" size="icon" onClick={handleSendMessage} disabled={isLoading} className="rounded-2xl w-11 h-11 shrink-0 shadow-sm">
                 <Send className="w-5 h-5" />
               </Button>
             </div>
           </div>
         </SheetContent>
       </Sheet>
-    </div>
+    </div >
   );
 };
 

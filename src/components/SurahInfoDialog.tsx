@@ -46,9 +46,8 @@ export const SurahInfoDialog = ({ surah, isOpen, onClose }: SurahInfoDialogProps
             const rawText = rawData?.text || "";
 
             // 2. Use AI to structure it perfectly
-            const apiKey = import.meta.env.VITE_QURAN_AI_API_KEY;
-            if (apiKey) {
-                const systemPrompt = `You are a Quran scholar.
+            // 2. Use AI to structure it perfectly
+            const systemPrompt = `You are a Quran scholar.
         The user wants information about Surah ${surah.name_simple} (${surah.name_arabic}).
         
         Source Text from Quran.com (use this as primary source if useful):
@@ -67,11 +66,17 @@ export const SurahInfoDialog = ({ surah, isOpen, onClose }: SurahInfoDialogProps
         }
         Do NOT return markdown. Return ONLY the JSON.`;
 
-                const response = await chatWithAI(
-                    [{ role: "system", content: systemPrompt }],
-                    apiKey
+            let response;
+            try {
+                response = await chatWithAI(
+                    [{ role: "system", content: systemPrompt }]
                 );
+            } catch (e) {
+                // If AI fails/no keys, fallback logic will trigger in following block or by throwing
+                // Actually easier to just catch here or let it fall through
+            }
 
+            if (response) {
                 // Parse JSON
                 try {
                     // Clean possible markdown code blocks
@@ -92,7 +97,7 @@ export const SurahInfoDialog = ({ surah, isOpen, onClose }: SurahInfoDialogProps
                     });
                 }
             } else {
-                // Fallback if no AI key
+                // Fallback if no AI response
                 setInfo({
                     snapshot: `${surah.revelation_place} Surah, Order #${surah.revelation_order}`,
                     context: "Context API require AI key.",

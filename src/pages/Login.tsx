@@ -70,7 +70,7 @@ const Login = () => {
                 <div className="glass-card p-6 md:p-10 border border-white/5 shadow-2xl">
                     <div className="text-center mb-8">
                         <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-                            <img src="/quran-logo.svg" alt="Tadabbur" className="w-8 h-8 opacity-90" />
+                            <img src="/quran-logo.svg" alt="TilawaNow" className="w-8 h-8 opacity-90" />
                         </div>
                         <h1 className="text-2xl font-bold text-foreground mb-2">Welcome Back</h1>
                         <p className="text-muted-foreground">Sign in to continue your journey</p>

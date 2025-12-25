@@ -121,9 +121,6 @@ const SurahStoryPage = () => {
     };
 
     const generateStoriesAI = async (text: string, range: string, language: string = "English"): Promise<string> => {
-        const apiKey = import.meta.env.VITE_QURAN_AI_API_KEY;
-        if (!apiKey) return text;
-
         const systemPrompt = `You are a storyteller.
         Rewrite this block of Quran Verses (${range}) meaning as a single, simple continuous story paragraph.
         
@@ -142,7 +139,7 @@ const SurahStoryPage = () => {
         `;
 
         try {
-            return await chatWithAI([{ role: "system", content: systemPrompt }], apiKey);
+            return await chatWithAI([{ role: "system", content: systemPrompt }]);
         } catch (e) {
             throw e;
         }

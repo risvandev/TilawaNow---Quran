@@ -23,12 +23,12 @@ export function InviteDialog() {
     const handleEmailInvite = (e: React.FormEvent) => {
         e.preventDefault();
         // Simple mailto implementation directly opens the user's email client
-        const subject = encodeURIComponent("You’re Invited to Join Tadabbur");
+        const subject = encodeURIComponent("You’re Invited to Join TilawaNow");
         const body = encodeURIComponent(`Assalamu alaikum,
 
 I hope this message finds you well.
 
-I’d like to invite you to explore Tadabbur, a platform designed to help you read, listen to, and understand the Qur’an with clarity and ease.
+I’d like to invite you to explore TilawaNow, a platform designed to help you read, listen to, and understand the Qur’an with clarity and ease.
 
 You can get started by visiting the link below:
 
@@ -39,7 +39,7 @@ If you have any questions or need help getting started, feel free to reach out.
 Looking forward to having you with us.
 
 Best regards,
-Tadabbur Team`);
+TilawaNow Team`);
 
         window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 

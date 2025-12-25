@@ -24,8 +24,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings as SettingsIcon, Moon, Sun, Globe, User, Bell, BookOpen, Volume2, Play, Loader2, Square, MessageCircle, Send, ChevronLeft, ChevronRight, Pencil, Check, X } from "lucide-react";
+import { Settings as SettingsIcon, Moon, Sun, Globe, User, Bell, BookOpen, Volume2, Play, Loader2, Square, MessageCircle, Send, ChevronLeft, ChevronRight, Pencil, Check, X, Heart, HelpCircle, Mail, ShieldCheck, Copy, QrCode } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getTranslationsByLanguage, AVAILABLE_RECITERS } from "@/lib/quran-api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -53,6 +60,9 @@ const Settings = () => {
   // Audio Preview State
   const [testAudioPlaying, setTestAudioPlaying] = useState(false);
   const [testAudioLoading, setTestAudioLoading] = useState(false);
+
+  // Donate Dialog State
+  const [isDonateOpen, setIsDonateOpen] = useState(false);
 
   // Reminder State
   const [reminderTime, setReminderTime] = useState("");
@@ -221,7 +231,7 @@ const Settings = () => {
         updateProfileSetting('notifications_enabled', true);
 
         // Send immediate test notification
-        new Notification("Tadabbur", {
+        new Notification("TilawaNow", {
           body: "Notifications active! May your journey be blessed.",
           icon: "/favicon-160x160.png"
         });
@@ -291,14 +301,19 @@ const Settings = () => {
     }
   };
 
+  const handleDonate = () => {
+    setIsDonateOpen(true);
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 md:px-6 py-8 md:max-w-5xl">
-        {/* Back Button (Mobile Only) */}
-        <div className="md:hidden mb-6">
+    <div className="bg-background flex-1">
+      <div className="container mx-auto px-4 md:px-6 py-4 md:py-8 md:max-w-5xl">
+        {/* Mobile Header (Back + Title Inline) */}
+        <div className="md:hidden flex items-center gap-4 mb-6">
           <Button
             variant="ghost"
-            className="gap-2 pl-0 hover:bg-transparent text-muted-foreground hover:text-foreground"
+            size="icon"
+            className="shrink-0 -ml-2 hover:bg-transparent text-muted-foreground hover:text-foreground"
             onClick={() => {
               if (showMobileDetail) {
                 setShowMobileDetail(false);
@@ -307,19 +322,29 @@ const Settings = () => {
               }
             }}
           >
-            <ChevronLeft className="w-5 h-5" />
-            {showMobileDetail ? "Settings" : "Back"}
+            <ChevronLeft className="w-6 h-6" />
           </Button>
+          {!showMobileDetail ? (
+            <div>
+              <h1 className="text-xl font-bold text-foreground">Settings</h1>
+            </div>
+          ) : (
+            <div>
+              <h1 className="text-xl font-bold text-foreground capitalize">
+                {activeTab === "notifications" ? "Notification" : activeTab} Settings
+              </h1>
+            </div>
+          )}
         </div>
 
-        {/* Header */}
-        <div className={`mb-8 ${showMobileDetail ? 'hidden md:block' : 'block'}`}>
+        {/* Desktop Header */}
+        <div className="hidden md:block mb-8">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
               <SettingsIcon className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground">Settings</h1>
+              <h1 className="text-3xl font-bold text-foreground">Settings</h1>
               <p className="text-muted-foreground">Customize your experience</p>
             </div>
           </div>
@@ -332,57 +357,99 @@ const Settings = () => {
           className="flex flex-col md:flex-row gap-6 md:gap-10"
         >
           {/* Mobile Menu List (Visible only on mobile when no detail is open) */}
-          <div className={`${showMobileDetail ? 'hidden' : 'flex'} md:hidden flex-col gap-2 w-full`}>
+          <div className={`${showMobileDetail ? 'hidden' : 'flex'} md:hidden flex-col gap-1 w-full`}>
             <button
               onClick={() => { setActiveTab("general"); setShowMobileDetail(true); }}
-              className="flex items-center justify-between p-4 glass-card hover:bg-white/5 active:bg-white/10 transition-colors group"
+              className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 border border-transparent hover:border-border/50 transition-all group"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg text-primary group-hover:bg-primary/20 transition-colors">
-                  <SettingsIcon className="w-5 h-5" />
+                <div className="p-1.5 bg-primary/5 rounded-md text-primary group-hover:bg-primary/10 transition-colors">
+                  <SettingsIcon className="w-4 h-4" />
                 </div>
-                <span className="font-medium text-foreground">General</span>
+                <span className="font-medium text-sm text-foreground">General</span>
               </div>
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </button>
 
             <button
               onClick={() => { setActiveTab("reading"); setShowMobileDetail(true); }}
-              className="flex items-center justify-between p-4 glass-card hover:bg-white/5 active:bg-white/10 transition-colors group"
+              className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 border border-transparent hover:border-border/50 transition-all group"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg text-primary group-hover:bg-primary/20 transition-colors">
-                  <BookOpen className="w-5 h-5" />
+                <div className="p-1.5 bg-primary/5 rounded-md text-primary group-hover:bg-primary/10 transition-colors">
+                  <BookOpen className="w-4 h-4" />
                 </div>
-                <span className="font-medium text-foreground">Reading & Audio</span>
+                <span className="font-medium text-sm text-foreground">Reading & Audio</span>
               </div>
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </button>
 
             <button
               onClick={() => { setActiveTab("notifications"); setShowMobileDetail(true); }}
-              className="flex items-center justify-between p-4 glass-card hover:bg-white/5 active:bg-white/10 transition-colors group"
+              className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 border border-transparent hover:border-border/50 transition-all group"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg text-primary group-hover:bg-primary/20 transition-colors">
-                  <Bell className="w-5 h-5" />
+                <div className="p-1.5 bg-primary/5 rounded-md text-primary group-hover:bg-primary/10 transition-colors">
+                  <Bell className="w-4 h-4" />
                 </div>
-                <span className="font-medium text-foreground">Notifications</span>
+                <span className="font-medium text-sm text-foreground">Notifications</span>
               </div>
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </button>
 
             <button
               onClick={() => { setActiveTab("profile"); setShowMobileDetail(true); }}
-              className="flex items-center justify-between p-4 glass-card hover:bg-white/5 active:bg-white/10 transition-colors group"
+              className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 border border-transparent hover:border-border/50 transition-all group"
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg text-primary group-hover:bg-primary/20 transition-colors">
-                  <User className="w-5 h-5" />
+                <div className="p-1.5 bg-primary/5 rounded-md text-primary group-hover:bg-primary/10 transition-colors">
+                  <User className="w-4 h-4" />
                 </div>
-                <span className="font-medium text-foreground">Profile</span>
+                <span className="font-medium text-sm text-foreground">Profile</span>
               </div>
-              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </button>
+
+            {/* Help & Support (Mobile) */}
+            <button
+              onClick={() => navigate("/help")}
+              className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 border border-transparent hover:border-border/50 transition-all group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 bg-primary/5 rounded-md text-primary group-hover:bg-primary/10 transition-colors">
+                  <HelpCircle className="w-4 h-4" />
+                </div>
+                <span className="font-medium text-sm text-foreground">Help & Support</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </button>
+
+            {/* Contact (Mobile) */}
+            <button
+              onClick={() => navigate("/contact")}
+              className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 border border-transparent hover:border-border/50 transition-all group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 bg-primary/5 rounded-md text-primary group-hover:bg-primary/10 transition-colors">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <span className="font-medium text-sm text-foreground">Contact</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </button>
+
+            {/* Donate Item (Mobile) */}
+            <button
+              onClick={handleDonate}
+              className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 border border-transparent hover:border-border/50 transition-all group mt-2"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 bg-pink-500/10 rounded-md text-pink-500 group-hover:bg-pink-500/20 transition-colors">
+                  <Heart className="w-4 h-4 fill-current" />
+                </div>
+                <span className="font-medium text-sm text-foreground">Support Us</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
 
@@ -814,11 +881,69 @@ const Settings = () => {
                   </>
                 )}
               </div>
+
+              {/* Support / Donate Section */}
+              <div className="glass-card p-6 border-pink-500/20 bg-pink-500/5">
+                <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <Heart className="w-5 h-5 text-pink-500 fill-pink-500" />
+                  Support Our Mission
+                </h2>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Support its development voluntarily. Access will <strong className="text-foreground">always be free</strong>.
+                </p>
+                <Button
+                  onClick={handleDonate}
+                  variant="hero"
+                  className="w-full gap-2"
+                >
+                  <Heart className="w-4 h-4 fill-primary/20" />
+                  Donate to Support
+                </Button>
+              </div>
             </TabsContent>
           </div>
         </Tabs>
 
       </div>
+
+
+      {/* Donate Dialog */}
+      <Dialog open={isDonateOpen} onOpenChange={setIsDonateOpen}>
+        <DialogContent className="sm:max-w-[300px] w-[90%] bg-card border-border p-5 gap-0 shadow-xl rounded-2xl mx-auto">
+          <div className="flex flex-col items-center text-center">
+
+            <DialogTitle className="text-lg font-bold mb-2 flex items-center justify-center gap-2">
+              <Heart className="w-5 h-5 text-primary fill-primary/20" />
+              Support Tadabbur
+            </DialogTitle>
+
+            <DialogDescription className="text-muted-foreground text-xs mx-auto mb-4 leading-tight">
+              Your contribution helps keep the Qur'an accessible.
+            </DialogDescription>
+
+            {/* QR Code - Minimal & Clean */}
+            <div className="bg-white p-3 rounded-xl shadow-sm border border-neutral-100 mb-3">
+              <div className="w-40 h-40 bg-white rounded-lg flex items-center justify-center overflow-hidden">
+                <img src="/TilawaNow_qr_code.png" alt="Donate QR Code" className="w-full h-full object-contain" />
+              </div>
+            </div>
+
+            <p className="text-[10px] text-muted-foreground font-medium opacity-60">
+              Secure Donation
+            </p>
+
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-border/40 flex justify-center">
+            <button
+              onClick={() => setIsDonateOpen(false)}
+              className="text-xs font-medium text-foreground hover:text-primary transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

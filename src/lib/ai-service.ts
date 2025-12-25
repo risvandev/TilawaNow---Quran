@@ -16,33 +16,63 @@ export interface SearchResult {
 const DEFAULT_API_ENDPOINT = "https://api.openai.com/v1/chat/completions";
 const DEFAULT_MODEL = "nvidia/nemotron-nano-12b-v2-vl:free";
 
+// Helper to execute request with fallback
+const executeWithFallback = async (
+    requestFn: (key: string) => Promise<any>
+): Promise<any> => {
+    const primaryKey = import.meta.env.VITE_AI_API_KEY;
+    const secondaryKey = import.meta.env.VITE_AI_API_KEY_SECONDARY;
+
+    if (!primaryKey && !secondaryKey) {
+        throw new Error("No AI API Keys configured. Please check .env file.");
+    }
+
+    // Try Primary
+    try {
+        if (primaryKey) {
+            return await requestFn(primaryKey);
+        }
+    } catch (error: any) {
+        console.warn("Primary AI Key failed:", error.message);
+        // If no secondary key, rethrow
+        if (!secondaryKey) throw error;
+    }
+
+    // Try Secondary
+    if (secondaryKey) {
+        console.log("Switching to Secondary AI Key...");
+        try {
+            return await requestFn(secondaryKey);
+        } catch (error: any) {
+            console.error("Secondary AI Key also failed:", error.message);
+            throw new Error("AI Service unavailable: Both keys failed.");
+        }
+    }
+};
+
 // Generic Chat Function
 export const chatWithAI = async (
     messages: ChatMessage[],
-    apiKey: string,
+    apiKey?: string, // Optional now
     model: string = DEFAULT_MODEL
 ): Promise<string> => {
-    if (!apiKey) throw new Error("API Key is missing");
+    
+    // Core request logic
+    const makeRequest = async (key: string) => {
+        const cleanKey = key.trim();
+        const baseUrl = import.meta.env.VITE_AI_BASE_URL || DEFAULT_API_ENDPOINT;
 
-    // Clean the key (remove whitespace/newlines which cause fetch errors)
-    const cleanKey = apiKey.trim();
-
-    // Allow custom endpoint from env (useful for OpenRouter, local models, etc.)
-    const baseUrl = import.meta.env.VITE_AI_BASE_URL || DEFAULT_API_ENDPOINT;
-
-    try {
         console.log("AI Service: Sending request...", {
             url: baseUrl,
             model,
-            messageCount: messages.length,
-            keyLength: cleanKey.length
+            messageCount: messages.length
         });
 
         const response = await fetch(baseUrl, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${cleanKey}`, // Configurable: some providers use different headers, but Bearer is standard
+                "Authorization": `Bearer ${cleanKey}`,
             },
             body: JSON.stringify({
                 model,
@@ -53,40 +83,38 @@ export const chatWithAI = async (
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            console.error("AI Service Error Response:", response.status, errorData);
 
-            if (response.status === 401) {
-                throw new Error("Invalid API Key. Please check your .env file.");
-            }
-            if (response.status === 429) {
-                throw new Error("Rate limit exceeded or insufficient quota.");
-            }
+            if (response.status === 401) throw new Error("Invalid API Key");
+            if (response.status === 429) throw new Error("Rate limit exceeded");
+            
             throw new Error(errorData.error?.message || `AI request failed: ${response.statusText}`);
         }
 
         const data = await response.json();
         return data.choices[0].message.content;
-    } catch (error) {
-        console.error("AI Chat Error:", error);
-        throw error;
+    };
+
+    // If explicit key provided, use it directly (legacy support or specific overrides)
+    if (apiKey) {
+        return makeRequest(apiKey);
     }
+
+    // Otherwise use fallback logic
+    return executeWithFallback(makeRequest);
 };
 
 // Specialized Search Function
 export const searchWithAI = async (
     query: string,
-    apiKey: string,
-    availableSurahs: Surah[]
+    apiKey?: string, // Optional
+    availableSurahs: Surah[] = [] // Default empty array to be safe
 ): Promise<SearchResult> => {
-    if (!apiKey) throw new Error("API Key is missing");
+    
+    const makeRequest = async (key: string) => {
+        const cleanKey = key.trim();
+        const baseUrl = import.meta.env.VITE_AI_BASE_URL || DEFAULT_API_ENDPOINT;
 
-    // Clean the key (remove whitespace/newlines)
-    const cleanKey = apiKey.trim();
-
-    // Allow custom endpoint from env
-    const baseUrl = import.meta.env.VITE_AI_BASE_URL || DEFAULT_API_ENDPOINT;
-
-    const systemPrompt = `
+        const systemPrompt = `
     You are a search assistant for a Quran application.
     The user is searching for a Surah using a query that might be a name, a topic, a meaning, or a misspelled word.
     
@@ -106,23 +134,21 @@ export const searchWithAI = async (
     }
   `;
 
-    try {
         const response = await fetch(baseUrl, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${cleanKey}`,
-                "HTTP-Referer": window.location.origin, // Required by OpenRouter
-                "X-Title": "Tadabbur", // Optional for OpenRouter
+                "HTTP-Referer": window.location.origin,
+                "X-Title": "TilawaNow",
             },
             body: JSON.stringify({
-                model: DEFAULT_MODEL, // OpenRouter model format usually requires provider prefix, or just gpt-3.5-turbo works too depending on default
+                model: DEFAULT_MODEL,
                 messages: [
                     { role: "system", content: systemPrompt },
                     { role: "user", content: query }
                 ],
                 temperature: 0.3,
-                // Removed response_format: { type: "json_object" } for better compatibility
             }),
         });
 
@@ -131,16 +157,17 @@ export const searchWithAI = async (
         const data = await response.json();
         let content = data.choices[0].message.content;
 
-        // robust JSON extraction
         const jsonMatch = content.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
             content = jsonMatch[0];
         }
 
-        const result = JSON.parse(content);
-        return result;
-    } catch (error) {
-        console.error("AI Search Error:", error);
-        throw error; // Let the caller handle the fallback
+        return JSON.parse(content);
+    };
+
+    if (apiKey) {
+        return makeRequest(apiKey);
     }
+
+    return executeWithFallback(makeRequest);
 };

@@ -222,12 +222,9 @@ const SurahList = () => {
         return;
       }
 
-      const apiKey = import.meta.env.VITE_SEARCH_AI_API_KEY;
-      if (!apiKey) return; // Silent fail to normal search if no key
-
       setIsSearchingAI(true);
       try {
-        const result = await searchWithAI(searchQuery, apiKey, surahs);
+        const result = await searchWithAI(searchQuery, undefined, surahs);
 
         if (result.suggestedQuery && result.suggestedQuery.toLowerCase() !== searchQuery.toLowerCase()) {
           setAiSuggestion(result.suggestedQuery);

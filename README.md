@@ -1,73 +1,60 @@
-# Welcome to your Lovable project
+# TilawaNow
 
-## Project info
+Welcome to **TilawaNow**, a modern, comprehensive platform designed to connect you with the Holy Qur'an deeply and personally.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 🌟 About
 
-## How can I edit this code?
+TilawaNow provides a seamless and spiritually enriching experience for reading, understanding, and tracking your journey with the Qur'an. Whether you are a daily reciter or a student of knowledge, our tools are designed to support your growth.
 
-There are several ways of editing your application.
+## ✨ Key Features
 
-**Use Lovable**
+### 🤖 Advanced AI Assistance
+- **Quran Expert AI**: Ask deep questions about verses, context, and meanings.
+- **Smart Search**: Find exactly what you are looking for with semantic understanding.
+- **Instant Answers**: Get immediate responses to your questions about the site and its features.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### 📊 Progress Tracking
+- **Personal Tracking Facility**: Keep track of your daily reading habits, streak, and completion goals.
+- **Visual Insights**: Monitor your spiritual consistency with intuitive charts and stats.
 
-Changes made via Lovable will be committed automatically to this repo.
+### 🌍 Universal Accessibility
+- **Multi-language Support**: Get explanations, translations, and meanings in **every language**.
+- **Global Understanding**: The platform ensures that the message of the Qur'an is accessible to everyone, regardless of their native tongue.
+- **Tafsir & Context**: Deep dive into the meanings behind the verses with comprehensive explanations.
 
-**Use your preferred IDE**
+### 📱 Modern Experience
+- **Mobile-First Design**: Optimized for reading on the go with a minimal and focused UI.
+- **Beautiful Typography**: Enhanced readability for both Arabic script and translations.
+- **Dark Mode**: A premium, eye-friendly reading environment.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🛠️ Built With
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **React**
+- **TypeScript**
+- **Vite**
+- **Tailwind CSS**
+- **shadcn/ui**
 
-Follow these steps:
+## 🚀 Getting Started
+
+To run this project locally:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Navigate to directory
+cd serene-quran
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+<p align="center">
+  <em>Built voluntarily to serve the Qur'an. Access is always free.</em>
+</p>

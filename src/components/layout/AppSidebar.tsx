@@ -14,6 +14,7 @@ import {
   Lock,
   ChevronRight,
 } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 interface SidebarContextType {
   isExpanded: boolean;
@@ -102,12 +103,12 @@ export const AppSidebar = () => {
       {/* Header with logo and toggle */}
       <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
         <Link to="/home" className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center p-1.5">
-            <img src="/quran-logo.svg" alt="Tadabbur Logo" className="w-full h-full object-contain" />
-          </div>
-          {shouldShowExpanded && (
-            <span className="font-semibold text-foreground animate-fade-in">Tadabbur</span>
-          )}
+          <Logo
+            showText={shouldShowExpanded}
+            textClassName="font-semibold text-foreground"
+            className="gap-3"
+            iconClassName="w-8 h-8 p-1.5"
+          />
         </Link>
         <Button
           variant="ghost"

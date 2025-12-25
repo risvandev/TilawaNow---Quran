@@ -31,7 +31,7 @@ const TermsConditions = () => {
                 1. Acceptance of Terms
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                By accessing and using Tadabbur, you agree to be bound by these Terms of Service. These terms apply to all visitors, users, and others who access the service. If you disagree with any part of the terms, you may not access the service.
+                By accessing and using TilawaNow, you agree to be bound by these Terms of Service. These terms apply to all visitors, users, and others who access the service. If you disagree with any part of the terms, you may not access the service.
               </p>
             </section>
 
@@ -42,7 +42,7 @@ const TermsConditions = () => {
                 2. Use of Service
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-4">
-                Tadabbur is provided for personal, spiritual, and educational use. You agree not to:
+                TilawaNow is provided for personal, spiritual, and educational use. You agree not to:
               </p>
               <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
                 <li>Use the service for any illegal purpose or to violate any laws in your jurisdiction.</li>
@@ -56,7 +56,7 @@ const TermsConditions = () => {
             <section>
               <h2 className="text-xl font-semibold text-foreground mb-4">3. Content & Copyright</h2>
               <p className="text-muted-foreground leading-relaxed">
-                The Quranic text and audio provided on this platform are public domain or used with permission from their respective sources. The design, code, and unique features of Tadabbur are copyright of the Tadabbur team.
+                The Quranic text and audio provided on this platform are public domain or used with permission from their respective sources. The design, code, and unique features of TilawaNow are copyright of the TilawaNow team.
               </p>
             </section>
 
@@ -67,7 +67,7 @@ const TermsConditions = () => {
                 4. Disclaimer
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                While we strive for accuracy in the Quranic text and translations, Tadabbur is a human effort and may contain errors. If you find any errors in the text or audio, please report them so we can correct them immediately. We are not liable for any misunderstandings arising from the use of translations.
+                While we strive for accuracy in the Quranic text and translations, TilawaNow is a human effort and may contain errors. If you find any errors in the text or audio, please report them so we can correct them immediately. We are not liable for any misunderstandings arising from the use of translations.
               </p>
             </section>
 
@@ -83,7 +83,7 @@ const TermsConditions = () => {
             <div className="bg-secondary/20 rounded-xl p-6 mt-8">
               <h3 className="font-semibold text-foreground mb-2">Contact Us</h3>
               <p className="text-muted-foreground text-sm">
-                If you have any questions about these Terms, please contact us at <a href="mailto:support@tadabbur.com" className="text-primary hover:underline">support@tadabbur.com</a>.
+                If you have any questions about these Terms, please contact us at <a href="mailto:support@tilawanow.com" className="text-primary hover:underline">support@tilawanow.com</a>.
               </p>
             </div>
           </div>

@@ -31,7 +31,7 @@ const PrivacyPolicy = () => {
                 1. Our Commitment to Privacy
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                At Tadabbur, we consider your privacy a sacred trust. We are dedicated to providing a spiritual environment free from the distractions of data mining and intrusive tracking. We collect only the absolute minimum amount of information necessary to provide you with a seamless experience.
+                At TilawaNow, we consider your privacy a sacred trust. We are dedicated to providing a spiritual environment free from the distractions of data mining and intrusive tracking. We collect only the absolute minimum amount of information necessary to provide you with a seamless experience.
               </p>
             </section>
 
@@ -64,7 +64,7 @@ const PrivacyPolicy = () => {
                 3. How We Use Your Data
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                Your data is used solely for the purpose of maintaining your personal experience on Tadabbur. We do NOT sell, rent, or share your personal data with third-party advertisers or data brokers. Your reading habits are private to you.
+                Your data is used solely for the purpose of maintaining your personal experience on TilawaNow. We do NOT sell, rent, or share your personal data with third-party advertisers or data brokers. Your reading habits are private to you.
               </p>
             </section>
 
