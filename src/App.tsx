@@ -222,6 +222,8 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { BookmarksProvider } from "./contexts/BookmarksContext";
 import GlobalAudioPlayer from "./components/GlobalAudioPlayer";
 
+import { PWAProvider } from "./contexts/PWAContext";
+
 const App = () => {
   // Initialize Quran font preference & Night Mode
   useEffect(() => {
@@ -240,23 +242,25 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <ScrollToTop />
-          <AuthProvider>
-            <BookmarksProvider>
-              <AudioPlayerProvider>
-                <SidebarProvider>
-                  <AppRoutes />
-                </SidebarProvider>
-                <GlobalAudioPlayer />
-              </AudioPlayerProvider>
-            </BookmarksProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
+      <PWAProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <ScrollToTop />
+            <AuthProvider>
+              <BookmarksProvider>
+                <AudioPlayerProvider>
+                  <SidebarProvider>
+                    <AppRoutes />
+                  </SidebarProvider>
+                  <GlobalAudioPlayer />
+                </AudioPlayerProvider>
+              </BookmarksProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </PWAProvider>
     </QueryClientProvider>
   );
 };

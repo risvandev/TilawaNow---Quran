@@ -4,6 +4,7 @@ import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { QuickStartSection } from "@/components/landing/QuickStartSection";
 import { HighlightedAyahSection } from "@/components/landing/HighlightedAyahSection";
 import { CTASection } from "@/components/landing/CTASection";
+import { AppDownloadSection } from "@/components/landing/AppDownloadSection";
 import { Footer } from "@/components/layout/Footer";
 
 const Landing = () => {
@@ -15,6 +16,7 @@ const Landing = () => {
       <QuickStartSection />
       <HighlightedAyahSection />
       <CTASection />
+      <AppDownloadSection />
       <Footer />
     </div>
   );
