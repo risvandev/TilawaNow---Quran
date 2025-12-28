@@ -298,20 +298,20 @@ const SurahList = () => {
       "container mx-auto px-4 md:px-6 py-8 transition-all duration-300",
       !isSidebarOpen ? "max-w-7xl" : "max-w-5xl"
     )}>
-      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Read Quran</h1>
-          <p className="text-muted-foreground">
+      <div className="mb-8 flex flex-row items-start md:items-end justify-between gap-2 md:gap-4">
+        <div className="min-w-0 shrink-0">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1 md:mb-2 whitespace-nowrap">Read Quran</h1>
+          <p className="text-sm md:text-base text-muted-foreground whitespace-nowrap">
             {QURAN_STATS.totalSurahs} Surahs • {QURAN_STATS.totalAyahs.toLocaleString()} Ayahs
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 md:gap-2 shrink-0">
           {currentProgress && (
             <Button
               variant="ghost"
               size="icon"
-              className="text-destructive hover:text-destructive hover:bg-destructive/10 h-10 w-10 shadow-sm"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 md:h-10 md:w-10 shadow-sm shrink-0"
               onClick={async () => {
                 if (confirm("Are you sure you want to restart your Khatmah from the beginning?")) {
                   await restartKhatmah();
@@ -320,13 +320,13 @@ const SurahList = () => {
               disabled={isLoading}
               title="Restart Khatmah"
             >
-              <RotateCcw className="w-4 h-4" />
+              <RotateCcw className="w-3.5 h-3.5 md:w-4 md:h-4" />
             </Button>
           )}
 
           <Button
             variant="hero"
-            className="gap-2 shadow-lg shadow-primary/20"
+            className="gap-1.5 md:gap-2 shadow-lg shadow-primary/20 h-8 px-2.5 text-xs md:h-10 md:px-4 md:text-sm shrink-0"
             onClick={async () => {
               if (isKhatmahActive) {
                 stopKhatmah();
@@ -339,14 +339,18 @@ const SurahList = () => {
             disabled={isLoading}
           >
             {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-3.5 h-3.5 md:w-4 md:h-4 animate-spin" />
             ) : isKhatmahActive ? (
               <>
-                <Pause className="w-4 h-4" /> Stop Khatmah
+                <Pause className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                <span className="md:hidden">Stop</span>
+                <span className="hidden md:inline">Stop Khatmah</span>
               </>
             ) : (
               <>
-                <Play className="w-4 h-4" /> {currentProgress ? "Resume Khatmah" : "Start Khatmah"}
+                <Play className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                <span className="md:hidden">{currentProgress ? "Resume" : "Start"}</span>
+                <span className="hidden md:inline">{currentProgress ? "Resume Khatmah" : "Start Khatmah"}</span>
               </>
             )}
           </Button>
