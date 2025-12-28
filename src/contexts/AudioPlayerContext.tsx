@@ -13,6 +13,7 @@ interface AudioPlayerContextType {
     playNext: () => void;
     playPrev: () => void;
     closePlayer: () => void;
+    setOnPlaylistEnd: (callback: () => void) => void;
 }
 
 const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(undefined);
@@ -205,6 +206,13 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
     }, [isPlaying]);
 
+    // Callback for playlist end (used by Khatmah feature)
+    const onPlaylistEndRef = useRef<(() => void) | null>(null);
+
+    const setOnPlaylistEnd = useCallback((callback: () => void) => {
+        onPlaylistEndRef.current = callback;
+    }, []);
+
     const playNext = useCallback(() => {
         setCurrentIndex(prev => {
             if (prev + 1 < playlist.length) {
@@ -214,6 +222,9 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
             } else {
                 // End of list
                 setIsPlaying(false);
+                if (onPlaylistEndRef.current) {
+                    onPlaylistEndRef.current();
+                }
                 return prev;
             }
         });
@@ -254,7 +265,8 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
                 togglePlay,
                 playNext,
                 playPrev,
-                closePlayer
+                closePlayer,
+                setOnPlaylistEnd
             }}
         >
             {children}

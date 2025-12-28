@@ -1,18 +1,21 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BookOpen, ChevronRight, User, Target, Settings } from "lucide-react";
+import { BookOpen, ChevronRight, User, Target, Settings, Play, Pause, Loader2, RotateCcw } from "lucide-react";
 import { POPULAR_SURAHS } from "@/lib/quran-api";
 import { Footer } from "@/components/layout/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { InviteDialog } from "@/components/InviteDialog";
 
 import { useBookmarks } from "@/contexts/BookmarksContext";
+import { useKhatmah } from "@/contexts/KhatmahContext";
 import { GoalSettingDialog } from "@/components/GoalSettingDialog";
 
 const Home = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { userStats, dailyActivity } = useBookmarks();
+  const { isKhatmahActive, currentProgress, isLoading, startKhatmah, stopKhatmah, restartKhatmah } = useKhatmah();
   const [greeting, setGreeting] = useState("Good morning");
 
   // Calculate Today's Progress
@@ -68,6 +71,71 @@ const Home = () => {
               </Button>
             </div>
           )}
+        </div>
+
+        {/* Khatmah Widget */}
+        <div className="glass-card p-4 md:p-6 mb-8 animate-fade-in-up delay-100 bg-gradient-to-r from-primary/5 to-transparent border-primary/20">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center shrink-0 text-primary">
+                <Target className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-1">
+                  Khatmah (Continuous Recitation)
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {currentProgress ? `Resume from Surah ${currentProgress.surah_id}` : "Start your journey from beginning to end"}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Restart Button - Only if progress exists */}
+              {currentProgress && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10 h-10 w-10"
+                  onClick={async () => {
+                    if (confirm("Are you sure you want to restart your Khatmah from the beginning?")) {
+                      await restartKhatmah();
+                    }
+                  }}
+                  disabled={isLoading}
+                  title="Restart Khatmah"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </Button>
+              )}
+
+              <Button
+                variant={isKhatmahActive ? "destructive" : "default"}
+                onClick={async () => {
+                  if (isKhatmahActive) {
+                    stopKhatmah();
+                  } else {
+                    await startKhatmah();
+                    // Redirect to reading page
+                    const targetSurah = currentProgress?.surah_id || 1;
+                    navigate(`/read/${targetSurah}`);
+                  }
+                }}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : isKhatmahActive ? (
+                  <>
+                    <Pause className="w-4 h-4 mr-2" /> Stop
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 mr-2" /> {currentProgress ? "Resume Khatmah" : "Start Khatmah"}
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Continue Reading Card */}

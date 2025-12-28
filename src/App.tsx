@@ -218,6 +218,7 @@ const AppRoutes = () => {
 import ScrollToTop from "./components/ScrollToTop";
 import { useEffect } from "react";
 import { AudioPlayerProvider } from "./contexts/AudioPlayerContext";
+import { KhatmahProvider } from "./contexts/KhatmahContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { BookmarksProvider } from "./contexts/BookmarksContext";
 import GlobalAudioPlayer from "./components/GlobalAudioPlayer";
@@ -251,10 +252,12 @@ const App = () => {
             <AuthProvider>
               <BookmarksProvider>
                 <AudioPlayerProvider>
-                  <SidebarProvider>
-                    <AppRoutes />
-                  </SidebarProvider>
-                  <GlobalAudioPlayer />
+                  <KhatmahProvider>
+                    <SidebarProvider>
+                      <AppRoutes />
+                    </SidebarProvider>
+                    <GlobalAudioPlayer />
+                  </KhatmahProvider>
                 </AudioPlayerProvider>
               </BookmarksProvider>
             </AuthProvider>

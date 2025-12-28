@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -11,7 +11,11 @@ import {
   Award,
   Clock,
   Settings,
-  Activity
+  Activity,
+  Play,
+  Pause,
+  Loader2,
+  RotateCcw
 } from "lucide-react";
 import { QURAN_STATS } from "@/lib/quran-api";
 import {
@@ -24,6 +28,7 @@ import {
 } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBookmarks } from "@/contexts/BookmarksContext";
+import { useKhatmah } from "@/contexts/KhatmahContext";
 import { GoalSettingDialog } from "@/components/GoalSettingDialog";
 import { supabase } from "@/lib/supabase";
 import { fetchSurahs } from "@/lib/quran-api";
@@ -31,7 +36,9 @@ import { useState, useEffect } from "react";
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const { readingHistory, bookmarks, userStats, dailyActivity } = useBookmarks();
+  const { isKhatmahActive, currentProgress, isLoading: isKhatmahLoading, startKhatmah, stopKhatmah, restartKhatmah } = useKhatmah();
 
   // Derived Stats
   const totalSurahsStarted = readingHistory.length;
@@ -220,6 +227,72 @@ const Dashboard = () => {
             </Link>
           </div>
         </div>
+
+        {/* Khatmah Widget - Only show if started */}
+        {currentProgress && (
+          <div className="glass-card p-6 mb-8 bg-gradient-to-r from-primary/5 to-transparent border-primary/20 flex flex-col md:flex-row items-center justify-between gap-6 animate-fade-in-up delay-100">
+            <div className="flex items-center gap-4 w-full md:w-auto">
+              <div className="w-14 h-14 rounded-2xl bg-primary/20 flex items-center justify-center shrink-0 text-primary shadow-sm">
+                <Target className="w-7 h-7" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-foreground mb-1">
+                  Khatmah (Continuous Recitation)
+                </h3>
+                <p className="text-muted-foreground">
+                  Resume from Surah {currentProgress.surah_id}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Restart Button */}
+              {currentProgress && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10 h-10 w-10"
+                  onClick={async () => {
+                    if (confirm("Are you sure you want to restart your Khatmah from the beginning?")) {
+                      await restartKhatmah();
+                    }
+                  }}
+                  disabled={isKhatmahLoading}
+                  title="Restart Khatmah"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </Button>
+              )}
+
+              <Button
+                size="lg"
+                className="w-full md:w-auto min-w-[140px] shadow-lg shadow-primary/20"
+                variant={isKhatmahActive ? "destructive" : "default"}
+                onClick={async () => {
+                  if (isKhatmahActive) {
+                    stopKhatmah();
+                  } else {
+                    await startKhatmah();
+                    const targetSurah = currentProgress?.surah_id || 1;
+                    navigate(`/read/${targetSurah}`);
+                  }
+                }}
+                disabled={isKhatmahLoading}
+              >
+                {isKhatmahLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : isKhatmahActive ? (
+                  <>
+                    <Pause className="w-5 h-5 mr-2" /> Stop Khatmah
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-5 h-5 mr-2" /> Resume Khatmah
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Main Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8 md:mb-10">

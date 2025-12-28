@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,8 @@ import {
   Sparkles,
   MessageCircle,
   PlayCircle,
+  Target,
+  RotateCcw
 } from "lucide-react";
 import {
   fetchSurahs,
@@ -59,6 +61,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/components/layout/AppSidebar";
 import { useBookmarks } from "@/contexts/BookmarksContext";
+import { useKhatmah } from "@/contexts/KhatmahContext";
 
 // Helper to convert English numbers to Arabic numerals
 const toArabicNumerals = (num: number | string | undefined | null) => {
@@ -203,6 +206,8 @@ const SurahList = () => {
   const [loading, setLoading] = useState(true);
   const [isSearchingAI, setIsSearchingAI] = useState(false);
   const [aiMatches, setAiMatches] = useState<number[] | null>(null);
+  const { isKhatmahActive, currentProgress, isLoading, startKhatmah, stopKhatmah, restartKhatmah } = useKhatmah();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadSurahs = async () => {
@@ -293,11 +298,59 @@ const SurahList = () => {
       "container mx-auto px-4 md:px-6 py-8 transition-all duration-300",
       !isSidebarOpen ? "max-w-7xl" : "max-w-5xl"
     )}>
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Read Quran</h1>
-        <p className="text-muted-foreground">
-          {QURAN_STATS.totalSurahs} Surahs • {QURAN_STATS.totalAyahs.toLocaleString()} Ayahs
-        </p>
+      <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Read Quran</h1>
+          <p className="text-muted-foreground">
+            {QURAN_STATS.totalSurahs} Surahs • {QURAN_STATS.totalAyahs.toLocaleString()} Ayahs
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {currentProgress && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10 h-10 w-10 shadow-sm"
+              onClick={async () => {
+                if (confirm("Are you sure you want to restart your Khatmah from the beginning?")) {
+                  await restartKhatmah();
+                }
+              }}
+              disabled={isLoading}
+              title="Restart Khatmah"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </Button>
+          )}
+
+          <Button
+            variant="hero"
+            className="gap-2 shadow-lg shadow-primary/20"
+            onClick={async () => {
+              if (isKhatmahActive) {
+                stopKhatmah();
+              } else {
+                await startKhatmah();
+                const targetSurah = currentProgress?.surah_id || 1;
+                navigate(`/read/${targetSurah}`);
+              }
+            }}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : isKhatmahActive ? (
+              <>
+                <Pause className="w-4 h-4" /> Stop Khatmah
+              </>
+            ) : (
+              <>
+                <Play className="w-4 h-4" /> {currentProgress ? "Resume Khatmah" : "Start Khatmah"}
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       <div className="relative mb-8">
@@ -412,6 +465,9 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
     currentWordPosition,
     isLoading: isGlobalLoading
   } = useAudioPlayer();
+
+  const { isKhatmahActive, currentProgress, startKhatmah, stopKhatmah, restartKhatmah } = useKhatmah();
+  const navigate = useNavigate();
 
   const { updateReadingHistory } = useBookmarks();
   const lastLoggedVerseRef = useRef<string | null>(null);
@@ -672,6 +728,10 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
 
             {/* Bottom: Story Mode & Play Audio */}
             <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
+                {/* Khatmah Buttons Removed from Header as requested */}
+              </div>
+
               <Link to={`/story/${surahId}`}>
                 <Button
                   variant="ghost"

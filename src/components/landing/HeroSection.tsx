@@ -78,7 +78,7 @@ export const HeroSection = () => {
             </Link>
           </Button>
           <Button asChild variant="heroOutline" size="lg">
-            <Link to="/read">Explore Surahs</Link>
+            <Link to="/home">Explore</Link>
           </Button>
         </div>
       </div>
