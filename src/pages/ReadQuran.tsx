@@ -349,7 +349,7 @@ const SurahList = () => {
             ) : (
               <>
                 <Play className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                <span className="md:hidden">{currentProgress ? "Resume" : "Start"}</span>
+                <span className="md:hidden">{currentProgress ? "Resume" : "khatmah"}</span>
                 <span className="hidden md:inline">{currentProgress ? "Resume Khatmah" : "Start Khatmah"}</span>
               </>
             )}
