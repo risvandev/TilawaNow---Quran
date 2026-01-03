@@ -31,7 +31,7 @@ export const AppDownloadSection = () => {
                         </h2>
 
                         <p className="text-lg text-muted-foreground mb-8 max-w-lg mx-auto md:mx-0 leading-relaxed">
-                            Experience the best of TilawaNow on your device. Enjoy offline reading,
+                            Experience the best of TilawaNow on your device. Enjoy reading,
                             background audio, and a focused spiritual journey wherever you go.
                         </p>
 
