@@ -935,7 +935,7 @@ const Settings = () => {
                 onClick={() => {
                   // Replace 'your-upi-id@bank' with your actual UPI ID
                   // Replace 'Your Name' with your actual name
-                  const upiId = "your-upi-id@bank";
+                  const upiId = "harifapm20@oksbi";
                   const name = "TilawaNow";
                   const url = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(name)}&cu=INR`;
                   window.location.href = url;
