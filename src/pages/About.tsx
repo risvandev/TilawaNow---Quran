@@ -123,7 +123,7 @@ const About = () => {
             Built with <Heart className="w-6 h-6 text-red-500 fill-red-500" /> by the Community
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
-            TilawaNow is a passion project built by developers who believe in making Islamic resources open and high-quality. We are constantly improving and adding new features.
+            TilawaNow is a passion project built by Risvan Studio, which believes in making Islamic resources open and high-quality. We are constantly improving and adding new features.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-muted-foreground">
