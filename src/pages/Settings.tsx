@@ -933,7 +933,7 @@ const Settings = () => {
               <Button
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2 h-10 rounded-xl"
                 onClick={() => {
-                  // Replace 'your-upi-id@bank' with your actual UPI ID
+                  // Replace 'harifapm20@oksbi' with your actual UPI ID
                   // Replace 'Your Name' with your actual name
                   const upiId = "harifapm20@oksbi";
                   const name = "TilawaNow";
