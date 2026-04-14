@@ -1,82 +1,232 @@
-import { useNavigate } from "react-router-dom";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, SkipForward, SkipBack, X, Loader2 } from "lucide-react";
+import {
+    Play, Pause, SkipForward, SkipBack, X,
+    Loader2, Repeat, Repeat1, Gauge
+} from "lucide-react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
+import { usePipPlayer } from "@/hooks/usePipPlayer";
+import PipPlayer from "@/components/player/PipPlayer";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import ProgressBar from "@/components/player/ProgressBar";
+import FullPlayer from "@/components/player/FullPlayer";
 
 const GlobalAudioPlayer = () => {
-    const navigate = useNavigate();
+    const navigate = useRouter();
     const {
         currentVerseKey,
         currentSurah,
         isPlaying,
         isLoading,
+        currentTime,
+        duration,
+        isPlayerVisible,
         togglePlay,
         playNext,
         playPrev,
-        closePlayer
+        closePlayer,
+        seek,
+        setFullPlayerOpen,
+        playbackRate,
+        setPlaybackRate,
+        loopMode,
+        setLoopMode
     } = useAudioPlayer();
 
-    if (!currentVerseKey || !currentSurah) return null;
+    const { isPipActive, openPip, closePip } = usePipPlayer();
+
+    if (!isPlayerVisible) return <FullPlayer />;
+
+    // Create a target for the PiP window portal if active
+    const pipTarget = typeof window !== 'undefined' && isPipActive 
+        ? window.documentPictureInPicture?.window?.document.getElementById('pip-player-root') 
+        : null;
+
 
     return (
-        <div className="fixed bottom-4 left-4 right-4 md:left-1/2 md:right-auto md:-translate-x-1/2 z-[100] animate-in slide-in-from-bottom-full duration-300 md:w-full md:max-w-2xl">
-            <div className="bg-background/95 backdrop-blur-xl border border-border/40 shadow-2xl rounded-2xl p-3 md:p-4 flex items-center justify-between gap-4 ring-1 ring-white/5">
-
-                {/* Track Info - Click to Navigate */}
-                <div
-                    className="flex items-center gap-3 md:gap-4 min-w-0 flex-1 cursor-pointer group"
-                    onClick={() => navigate(`/read/${currentSurah.id}`)}
-                >
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/10 flex items-center justify-center font-bold text-primary shrink-0 text-sm md:text-base ring-1 ring-primary/20 group-hover:bg-primary/20 transition-colors">
-                        {currentSurah.id}
+        <>
+            {/* Mini Player */}
+            <div className="fixed bottom-[68px] md:bottom-4 left-3 right-3 md:left-1/2 md:right-auto md:-translate-x-1/2 z-[101] animate-in slide-in-from-bottom-full duration-500 md:w-full md:max-w-2xl">
+                <div className="player-glass rounded-2xl shadow-2xl ring-1 ring-white/[0.06] overflow-hidden">
+                    
+                    {/* Top Progress Bar (thin accent line) */}
+                    <div className="px-3 pt-2">
+                        <ProgressBar
+                            currentTime={currentTime}
+                            duration={duration}
+                            onSeek={seek}
+                            compact
+                        />
                     </div>
-                    <div className="min-w-0 flex-1">
-                        <h4 className="font-semibold text-sm md:text-base truncate leading-tight group-hover:text-primary transition-colors">
-                            {currentSurah.name_simple}
-                        </h4>
-                        <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-xs text-muted-foreground truncate">
-                                Verse {currentVerseKey.split(':')[1]}
-                            </span>
-                            <span className="w-1 h-1 rounded-full bg-muted-foreground/30 hidden md:block" />
-                            <span className="text-xs text-muted-foreground hidden md:block">
-                                {currentSurah.translated_name.name}
-                            </span>
+
+                    {/* Main Controls Row */}
+                    <div className="px-3 pb-3 pt-1.5 flex items-center justify-between gap-2 md:gap-4">
+                        
+                        {/* Track Info — Click to Open Full Player */}
+                        <div
+                            className="flex items-center gap-2.5 md:gap-3 min-w-0 flex-1 cursor-pointer group"
+                            onClick={() => setFullPlayerOpen(true)}
+                        >
+                            <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl bg-primary/10 flex items-center justify-center font-bold text-primary shrink-0 text-xs md:text-sm ring-1 ring-primary/20 group-hover:bg-primary/20 group-hover:ring-primary/40 transition-all duration-200 shadow-sm">
+                                {currentSurah!.id}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <h4 className="font-semibold text-xs md:text-sm truncate leading-tight group-hover:text-primary transition-colors">
+                                    {currentSurah!.name_simple}
+                                </h4>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                    <span className="text-[10px] md:text-xs text-muted-foreground truncate">
+                                        Verse {currentVerseKey!.split(':')[1]}
+                                    </span>
+                                    <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/30 hidden md:block" />
+                                    <span className="text-[10px] md:text-xs text-muted-foreground hidden md:block truncate">
+                                        {currentSurah!.translated_name.name}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Transport Controls */}
+                        <div className="flex items-center gap-0.5 md:gap-1 shrink-0">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={playPrev}
+                                className="h-8 w-8 md:h-9 md:w-9 text-foreground/70 hover:text-foreground rounded-lg"
+                            >
+                                <SkipBack className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                            </Button>
+
+                            <Button
+                                size="icon"
+                                className="h-10 w-10 md:h-11 md:w-11 rounded-full shadow-lg shadow-primary/25 hover:scale-105 active:scale-95 transition-all bg-primary text-primary-foreground"
+                                onClick={togglePlay}
+                            >
+                                {isLoading ? (
+                                    <Loader2 className="w-4.5 h-4.5 md:w-5 md:h-5 animate-spin" />
+                                ) : isPlaying ? (
+                                    <Pause className="w-4.5 h-4.5 md:w-5 md:h-5 fill-current" />
+                                ) : (
+                                    <Play className="w-4.5 h-4.5 md:w-5 md:h-5 fill-current ml-0.5" />
+                                )}
+                            </Button>
+
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => playNext()}
+                                className="h-8 w-8 md:h-9 md:w-9 text-foreground/70 hover:text-foreground rounded-lg"
+                            >
+                                <SkipForward className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                            </Button>
+                        </div>
+
+                        {/* Secondary Controls */}
+                        <div className="flex items-center gap-0.5 md:gap-1 shrink-0 border-l border-border/30 pl-2 md:pl-3 ml-1">
+                            
+                            {/* Loop Toggle */}
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                    if (loopMode === 'NONE') setLoopMode('SURAH');
+                                    else if (loopMode === 'SURAH') setLoopMode('AYAH');
+                                    else setLoopMode('NONE');
+                                }}
+                                className={cn(
+                                    "transition-colors h-8 w-8 rounded-lg",
+                                    loopMode !== 'NONE' ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-secondary"
+                                )}
+                                title={loopMode === 'AYAH' ? "Looping current Ayah" : loopMode === 'SURAH' ? "Looping Surah" : "Loop off"}
+                            >
+                                {loopMode === 'AYAH' ? <Repeat1 className="w-3.5 h-3.5" /> : <Repeat className="w-3.5 h-3.5" />}
+                            </Button>
+
+                            {/* Speed Control — hidden on mobile */}
+                            <div className="hidden md:block">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-8 px-1.5 gap-1 rounded-lg text-muted-foreground hover:text-foreground font-medium flex items-center"
+                                        >
+                                            <Gauge className="w-3.5 h-3.5" />
+                                            <span className="text-[10px]">{playbackRate}x</span>
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent side="top" align="center" sideOffset={12} className="w-24 min-w-[5rem]">
+                                        {[0.5, 0.75, 1, 1.25, 1.5, 2].map(rate => (
+                                            <DropdownMenuItem
+                                                key={rate}
+                                                onClick={() => setPlaybackRate(rate)}
+                                                className={cn("justify-center", playbackRate === rate && "bg-primary/10 text-primary font-bold")}
+                                            >
+                                                {rate}x
+                                            </DropdownMenuItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+
+
+                            {/* Pop-out to Floating window */}
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={openPip}
+                                className={cn(
+                                    "text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors h-8 w-8 rounded-lg",
+                                    isPipActive && "text-primary bg-primary/10"
+                                )}
+                                title="Open Floating Mini Player"
+                            >
+                                <svg 
+                                    xmlns="http://www.w3.org/2000/svg" 
+                                    width="16" 
+                                    height="16" 
+                                    viewBox="0 0 24 24" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    strokeWidth="2" 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round"
+                                >
+                                    <path d="M15 3h6v6" />
+                                    <path d="M10 14 21 3" />
+                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                </svg>
+                            </Button>
+
+                            {/* Close */}
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={closePlayer}
+                                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors h-8 w-8 rounded-lg"
+                            >
+                                <X className="w-4 h-4" />
+                            </Button>
                         </div>
                     </div>
                 </div>
-
-                {/* Controls */}
-                <div className="flex items-center justify-center shrink-0">
-                    <Button
-                        size="icon"
-                        className="h-10 w-10 md:h-12 md:w-12 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all bg-primary text-primary-foreground"
-                        onClick={togglePlay}
-                    >
-                        {isLoading ? (
-                            <Loader2 className="w-5 h-5 md:w-6 md:h-6 animate-spin" />
-                        ) : isPlaying ? (
-                            <Pause className="w-5 h-5 md:w-6 md:h-6 fill-current" />
-                        ) : (
-                            <Play className="w-5 h-5 md:w-6 md:h-6 fill-current ml-0.5" />
-                        )}
-                    </Button>
-                </div>
-
-                {/* Secondary Controls */}
-                <div className="flex items-center gap-1 md:gap-2 shrink-0 border-l border-border/50 pl-2 md:pl-4 ml-2">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={closePlayer}
-                        className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors h-9 w-9 rounded-lg"
-                    >
-                        <X className="w-5 h-5" />
-                    </Button>
-                </div>
             </div>
-        </div>
+
+            {/* Full Player Drawer */}
+            <FullPlayer />
+
+            {/* Floating PiP Portal */}
+            {isPipActive && pipTarget && createPortal(<PipPlayer />, pipTarget)}
+        </>
     );
 };
 

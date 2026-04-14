@@ -35,18 +35,17 @@ export const Logo = ({
                 <img src="/quran-logo.svg" alt="TilawaNow Logo" className="w-full h-full object-contain" />
             </div>
 
-            {showText && (
-                <span
-                    className={cn(
-                        "font-bold text-foreground transition-opacity duration-300 ease-in-out",
-                        isFading ? "opacity-0" : "opacity-100",
-                        showArabic ? "font-arabic" : "", // Add arabic font class if available/needed
-                        textClassName
-                    )}
-                >
-                    {showArabic ? "تِلاوَة الآن" : "TilawaNow"}
-                </span>
-            )}
+            <span
+                className={cn(
+                    "font-bold text-foreground transition-all duration-200 ease-in-out overflow-hidden whitespace-nowrap",
+                    showText ? "max-w-[200px] opacity-100 ml-2" : "max-w-0 opacity-0 ml-0",
+                    isFading ? "opacity-0" : "",
+                    showArabic ? "font-arabic text-lg" : "", 
+                    textClassName
+                )}
+            >
+                {showArabic ? "تِلاوَة الآن" : "TilawaNow"}
+            </span>
         </div>
     );
 };

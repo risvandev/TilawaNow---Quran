@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Headphones, Languages, ChevronRight } from "lucide-react";
 
@@ -68,7 +68,7 @@ export const QuickStartSection = () => {
         {/* CTA */}
         <div className="text-center">
           <Button asChild variant="hero" size="lg">
-            <Link to="/read">
+            <Link href="/read">
               Start Reading Now
               <ChevronRight className="w-5 h-5 ml-1" />
             </Link>

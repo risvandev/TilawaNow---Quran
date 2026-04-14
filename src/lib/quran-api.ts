@@ -175,29 +175,33 @@ export const fetchSingleVerse = async (
   }
 };
 
-// Fetch all verse audios for a chapter
+// Fetch all verse audios for a chapter (with word-level timing segments)
 export const fetchChapterVerseAudios = async (
   surahNumber: number,
   reciterId: number = 7 // Default to Mishary
 ): Promise<Map<string, { url: string; segments: number[][] }>> => {
   const audioMap = new Map<string, { url: string; segments: number[][] }>();
   try {
+    // Use the verses endpoint with ?audio= param — this is the ONLY endpoint
+    // that returns word-level timing segments for highlighting
     const response = await fetch(
-      `${BASE_URL}/recitations/${reciterId}/by_chapter/${surahNumber}?per_page=300&segments=true`
+      `${BASE_URL}/verses/by_chapter/${surahNumber}?audio=${reciterId}&per_page=300&fields=text_uthmani`
     );
     const data = await response.json();
-    console.log(`[AudioFetch] Loaded for ${surahNumber} Reciter ${reciterId}. Files: ${data.audio_files?.length}`);
-    if (data.audio_files && data.audio_files.length > 0) {
-      console.log(`[AudioFetch] Sample Segments for first verse (${data.audio_files[0].verse_key}):`, data.audio_files[0].segments);
-    }
-    if (data.audio_files) {
-      data.audio_files.forEach((file: { verse_key: string; url: string; segments: number[][] }) => {
-        audioMap.set(file.verse_key, {
-          url: `https://verses.quran.com/${file.url}`,
-          segments: file.segments
-        });
+    if (data.verses) {
+      data.verses.forEach((verse: { verse_key: string; audio?: { url: string; segments?: number[][] } }) => {
+        if (verse.audio) {
+          const url = verse.audio.url.startsWith('http') 
+            ? verse.audio.url 
+            : `https://verses.quran.com/${verse.audio.url}`;
+          audioMap.set(verse.verse_key, {
+            url,
+            segments: verse.audio.segments || []
+          });
+        }
       });
     }
+    console.log(`[AudioFetch] Loaded ${audioMap.size} verses for Surah ${surahNumber}, Reciter ${reciterId}. Segments: ${audioMap.values().next().value?.segments?.length || 0} for first verse.`);
   } catch (error) {
     console.error("Error fetching chapter verse audios:", error);
   }

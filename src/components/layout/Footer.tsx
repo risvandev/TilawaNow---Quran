@@ -1,4 +1,5 @@
-import { Link, useLocation } from "react-router-dom";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { BookOpen, Heart, Instagram, Send } from "lucide-react";
 
 const footerLinks = {
@@ -19,8 +20,8 @@ const footerLinks = {
 };
 
 export const Footer = () => {
-  const location = useLocation();
-  const isLanding = location.pathname === "/";
+  const pathname = usePathname();
+  const isLanding = pathname === "/";
 
   return (
     <footer className="bg-card border-t border-border">
@@ -28,7 +29,7 @@ export const Footer = () => {
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1 lg:col-span-1">
-            <Link to="/" className="flex items-center gap-3 mb-4">
+            <Link href="/" className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
                 <BookOpen className="w-6 h-6 text-primary-foreground" />
               </div>
@@ -40,7 +41,7 @@ export const Footer = () => {
             </p>
             <div className="flex items-center gap-3">
               <a
-                href="https://t.me/TadabburOfficial"
+                href="https://t.me/TilawaNow"
                 target="_blank"
                 rel="noreferrer"
                 className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors"
@@ -49,7 +50,7 @@ export const Footer = () => {
               </a>
               <a
                 target="_blank"
-                href="https://www.instagram.com/risvan_studio/"
+                href="https://www.instagram.com/tilawanow/"
                 className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors"
                 aria-label="Instagram"
               >
@@ -65,8 +66,7 @@ export const Footer = () => {
               {footerLinks.product.map((link) => (
                 <li key={link.href}>
                   <Link
-                    to={link.href}
-                    state={isLanding ? { fromLanding: true } : undefined}
+                    href={link.href}
                     className="text-muted-foreground hover:text-foreground transition-colors text-sm"
                   >
                     {link.label}
@@ -83,8 +83,7 @@ export const Footer = () => {
               {footerLinks.resources.map((link) => (
                 <li key={link.href}>
                   <Link
-                    to={link.href}
-                    state={isLanding ? { fromLanding: true } : undefined}
+                    href={link.href}
                     className="text-muted-foreground hover:text-foreground transition-colors text-sm"
                   >
                     {link.label}
@@ -101,8 +100,7 @@ export const Footer = () => {
               {footerLinks.legal.map((link) => (
                 <li key={link.href}>
                   <Link
-                    to={link.href}
-                    state={isLanding ? { fromLanding: true } : undefined}
+                    href={link.href}
                     className="text-muted-foreground hover:text-foreground transition-colors text-sm"
                   >
                     {link.label}

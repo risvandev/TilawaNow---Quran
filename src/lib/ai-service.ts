@@ -8,166 +8,116 @@ export interface ChatMessage {
 
 export interface SearchResult {
     suggestedQuery?: string;
-    matchedSurahs: number[]; // IDs of matched surahs
+    matchedSurahs: number[];
     explanation?: string;
 }
 
-// Configuration
-const DEFAULT_API_ENDPOINT = "https://api.openai.com/v1/chat/completions";
-const DEFAULT_MODEL = "nvidia/nemotron-nano-12b-v2-vl:free";
-
-// Helper to execute request with fallback
-const executeWithFallback = async (
-    requestFn: (key: string) => Promise<any>
-): Promise<any> => {
-    const primaryKey = import.meta.env.VITE_AI_API_KEY;
-    const secondaryKey = import.meta.env.VITE_AI_API_KEY_SECONDARY;
-
-    if (!primaryKey && !secondaryKey) {
-        throw new Error("No AI API Keys configured. Please check .env file.");
-    }
-
-    // Try Primary
-    try {
-        if (primaryKey) {
-            return await requestFn(primaryKey);
-        }
-    } catch (error: any) {
-        console.warn("Primary AI Key failed:", error.message);
-        // If no secondary key, rethrow
-        if (!secondaryKey) throw error;
-    }
-
-    // Try Secondary
-    if (secondaryKey) {
-        console.log("Switching to Secondary AI Key...");
-        try {
-            return await requestFn(secondaryKey);
-        } catch (error: any) {
-            console.error("Secondary AI Key also failed:", error.message);
-            throw new Error("AI Service unavailable: Both keys failed.");
-        }
-    }
-};
-
-// Generic Chat Function
-export const chatWithAI = async (
+/**
+ * Universal Streaming Chat calling backend API
+ */
+export const streamChatWithAI = async (
     messages: ChatMessage[],
-    apiKey?: string, // Optional now
-    model: string = DEFAULT_MODEL
-): Promise<string> => {
-    
-    // Core request logic
-    const makeRequest = async (key: string) => {
-        const cleanKey = key.trim();
-        const baseUrl = import.meta.env.VITE_AI_BASE_URL || DEFAULT_API_ENDPOINT;
-
-        console.log("AI Service: Sending request...", {
-            url: baseUrl,
-            model,
-            messageCount: messages.length
-        });
-
-        const response = await fetch(baseUrl, {
+    onChunk: (chunk: string) => void
+): Promise<void> => {
+    try {
+        const apiUrl = (typeof window !== "undefined" ? window.location.origin : "") + "/api/chat";
+        const response = await fetch(apiUrl, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${cleanKey}`,
-            },
-            body: JSON.stringify({
-                model,
-                messages,
-                temperature: 0.7,
-            }),
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ messages, stream: true }),
         });
 
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-
-            if (response.status === 401) throw new Error("Invalid API Key");
-            if (response.status === 429) throw new Error("Rate limit exceeded");
-            
-            throw new Error(errorData.error?.message || `AI request failed: ${response.statusText}`);
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.error || "AI Service Unavailable");
         }
 
-        const data = await response.json();
-        return data.choices[0].message.content;
-    };
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error("Connection failed");
 
-    // If explicit key provided, use it directly (legacy support or specific overrides)
-    if (apiKey) {
-        return makeRequest(apiKey);
+        const decoder = new TextDecoder();
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            if (chunk) onChunk(chunk);
+        }
+    } catch (error: any) {
+        console.error("AI Stream Error:", error);
+        throw error;
     }
-
-    // Otherwise use fallback logic
-    return executeWithFallback(makeRequest);
 };
 
-// Specialized Search Function
-export const searchWithAI = async (
-    query: string,
-    apiKey?: string, // Optional
-    availableSurahs: Surah[] = [] // Default empty array to be safe
-): Promise<SearchResult> => {
-    
-    const makeRequest = async (key: string) => {
-        const cleanKey = key.trim();
-        const baseUrl = import.meta.env.VITE_AI_BASE_URL || DEFAULT_API_ENDPOINT;
-
-        const systemPrompt = `
-    You are a search assistant for a Quran application.
-    The user is searching for a Surah using a query that might be a name, a topic, a meaning, or a misspelled word.
-    
-    Available Surahs (ID: Name - English Name):
-    ${availableSurahs.map(s => `${s.id}: ${s.name_simple} - ${s.translated_name.name}`).join('\n')}
-    
-    Your goal:
-    1. Identify which Surahs are most relevant to the query.
-    2. If the user made a spelling mistake, suggest the correct query.
-    3. If the query is a topic (e.g., "story of moses"), find the Surahs that discuss it most significantly.
-
-    Return ONLY a JSON object with this format:
-    {
-      "suggestedQuery": "corrected query if needed, or null",
-      "matchedSurahs": [list of relevant Surah IDs sorted by relevance],
-      "explanation": "Brief reason for these matches (optional)"
-    }
-  `;
-
-        const response = await fetch(baseUrl, {
+/**
+ * Single-shot Chat calling backend API
+ */
+export const chatWithAI = async (
+    messages: ChatMessage[]
+): Promise<string> => {
+    try {
+        const response = await fetch("/api/chat", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${cleanKey}`,
-                "HTTP-Referer": window.location.origin,
-                "X-Title": "TilawaNow",
-            },
-            body: JSON.stringify({
-                model: DEFAULT_MODEL,
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: query }
-                ],
-                temperature: 0.3,
-            }),
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ messages, stream: false }),
         });
 
-        if (!response.ok) throw new Error("AI Search request failed");
-
-        const data = await response.json();
-        let content = data.choices[0].message.content;
-
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-            content = jsonMatch[0];
+        if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.error || "AI Service Unavailable");
         }
 
-        return JSON.parse(content);
-    };
-
-    if (apiKey) {
-        return makeRequest(apiKey);
+        const data = await response.json();
+        return data.content || "";
+    } catch (error: any) {
+        console.error("AI Chat Error:", error);
+        throw error;
     }
-
-    return executeWithFallback(makeRequest);
 };
+
+/**
+ * Semantic Surah Search using AI
+ */
+export const searchWithAI = async (
+    query: string,
+    _history?: any,
+    surahs: Surah[] = []
+): Promise<SearchResult> => {
+    const systemPrompt = `You are a Quranic semantic search assistant. 
+Return ONLY a JSON object: { "matchedSurahs": [id1, id2...], "suggestedQuery": "clean version" }
+Knowledge: ${surahs.slice(0, 50).map(s => `${s.id}:${s.name_simple}`).join(", ")}...`;
+
+    try {
+        const response = await chatWithAI([
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `Find surahs for: ${query}` }
+        ]);
+
+        const jsonMatch = response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+            return JSON.parse(jsonMatch[0]);
+        }
+    } catch (e) {}
+    
+    return { matchedSurahs: [] };
+};
+
+/**
+ * Utility to generate context-aware system prompts
+ */
+export function generateCompanionSystemPrompt(memory: any, basePrompt: string) {
+    const contextSection = `
+CURRENT USER CONTEXT:
+- Level: ${memory.knowledgeLevel || 'Beginner'}
+- Positions: ${memory.currentPosition?.verseKey || 'Overview'}
+
+BREVITY PROTOCOL: 1-2 direct sentences only. Be extremely brief.
+
+NAVIGATION:
+- Help user reach: / (Landing Page), /home (App Home), /read, /dashboard, /settings, /about, /help, /contact
+- Dynamic Routes: /info/surahId (for info), /story/surahId (for story)
+- Command: [[NAVIGATE:/path]] (Always start with / and use LOWERCASE)
+- Offer: [[OFFER_NAVIGATE:/path|Label]]
+`;
+
+    return basePrompt + contextSection;
+}

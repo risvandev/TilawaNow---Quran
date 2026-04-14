@@ -1,14 +1,25 @@
-import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+"use client";
 
-export const ProtectedRoute = () => {
+import { useRouter, usePathname } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
+
+export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const { user } = useAuth();
-    const location = useLocation();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    useEffect(() => {
+        if (!user) {
+            // Save the attempted url to localstorage since we can't pass state
+            localStorage.setItem("redirectAfterLogin", pathname);
+            router.push("/login");
+        }
+    }, [user, pathname, router]);
 
     if (!user) {
-        // Redirect to login but save the attempted location
-        return <Navigate to="/login" state={{ from: location }} replace />;
+        return null; // Or a loading spinner
     }
 
-    return <Outlet />;
+    return <>{children}</>;
 };

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Star, ChevronRight, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,7 +14,7 @@ export const HeroSection = () => {
 
       {/* Navbar */}
       <nav className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-3 py-4 md:px-6 md:py-6 container mx-auto">
-        <Link to="/">
+        <Link href="/">
           <Logo
             className="gap-2"
             iconClassName="w-5 h-5 md:w-8 md:h-8 p-1 md:p-1.5"
@@ -24,7 +24,7 @@ export const HeroSection = () => {
         <div className="flex items-center gap-4">
           {user ? (
             <Button asChild variant="ghost" className="text-foreground hover:bg-secondary/50 gap-2 h-8 px-2 md:h-10 md:px-4">
-              <Link to="/settings">
+              <Link href="/settings">
                 <User className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 <span className="text-xs md:text-base">{user.user_metadata.full_name || "Profile"}</span>
               </Link>
@@ -32,10 +32,10 @@ export const HeroSection = () => {
           ) : (
             <>
               <Button asChild variant="ghost" className="text-muted-foreground hover:text-foreground h-8 md:h-10 px-2 md:px-4 text-xs md:text-base">
-                <Link to="/login">Log In</Link>
+                <Link href="/login">Log In</Link>
               </Button>
               <Button asChild variant="hero" size="sm" className="h-8 md:h-9 text-xs md:text-sm">
-                <Link to="/signup">Sign Up</Link>
+                <Link href="/signup">Sign Up</Link>
               </Button>
             </>
           )}
@@ -72,13 +72,13 @@ export const HeroSection = () => {
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up delay-400">
           <Button asChild variant="hero" size="lg">
-            <Link to="/read">
+            <Link href="/read">
               Begin Your Journey
               <ChevronRight className="w-5 h-5 ml-1" />
             </Link>
           </Button>
           <Button asChild variant="heroOutline" size="lg">
-            <Link to="/home">Explore</Link>
+            <Link href="/home">Explore</Link>
           </Button>
         </div>
       </div>

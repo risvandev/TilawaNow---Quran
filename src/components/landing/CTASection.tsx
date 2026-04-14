@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 
@@ -14,7 +14,7 @@ export const CTASection = () => {
           No account needed — start reading in seconds.
         </p>
         <Button asChild variant="cta" size="lg" className="max-md:h-10 max-md:px-6 max-md:text-sm">
-          <Link to="/read">
+          <Link href="/read">
             Start Reading Now
             <ChevronRight className="w-4 h-4 md:w-5 md:h-5 ml-1" />
           </Link>

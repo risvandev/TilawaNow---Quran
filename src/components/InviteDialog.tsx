@@ -13,41 +13,52 @@ import { Label } from "@/components/ui/label";
 import { Mail, Share2, Copy, Check } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function InviteDialog() {
     const [email, setEmail] = useState("");
     const [copied, setCopied] = useState(false);
+    const [isSending, setIsSending] = useState(false);
+    const { user } = useAuth();
     const { toast } = useToast();
-    const inviteLink = window.location.origin + "/signup";
+    const inviteLink = typeof window !== "undefined" ? window.location.origin + "/signup" : "https://tilawanow.vercel.app/signup";
 
-    const handleEmailInvite = (e: React.FormEvent) => {
+    const handleEmailInvite = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Simple mailto implementation directly opens the user's email client
-        const subject = encodeURIComponent("You’re Invited to Join TilawaNow");
-        const body = encodeURIComponent(`Assalamu alaikum,
+        if (!email) return;
 
-I hope this message finds you well.
+        setIsSending(true);
+        try {
+            const response = await fetch("/api/invite", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    to_email: email,
+                    from_name: user?.user_metadata?.full_name || user?.email || "A friend",
+                    invite_link: inviteLink,
+                }),
+            });
 
-I’d like to invite you to explore TilawaNow, a platform designed to help you read, listen to, and understand the Qur’an with clarity and ease.
+            const data = await response.json();
 
-You can get started by visiting the link below:
-
-👉 ${inviteLink}
-
-If you have any questions or need help getting started, feel free to reach out.
-
-Looking forward to having you with us.
-
-Best regards,
-TilawaNow Team`);
-
-        window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-
-        toast({
-            title: "Email Client Opened",
-            description: "Please send the invite from your email app.",
-        });
-        setEmail("");
+            if (response.ok) {
+                toast({
+                    title: "Invite Sent!",
+                    description: `Invitation successfully sent to ${email}`,
+                });
+                setEmail("");
+            } else {
+                throw new Error(data.error || "Failed to send invite");
+            }
+        } catch (error: any) {
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: error.message || "Something went wrong. Please try again.",
+            });
+        } finally {
+            setIsSending(false);
+        }
     };
 
     const copyLink = () => {
@@ -121,8 +132,8 @@ TilawaNow Team`);
                         </div>
                     </div>
                     <DialogFooter className="sm:justify-start">
-                        <Button type="submit" variant="hero" className="w-full">
-                            Open Email App
+                        <Button type="submit" variant="hero" className="w-full" disabled={isSending}>
+                            {isSending ? "Sending Invite..." : "Send Invite"}
                         </Button>
                     </DialogFooter>
                 </form>

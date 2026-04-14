@@ -16,18 +16,27 @@ interface ReadingHistory {
     last_read_at: string;
 }
 
+interface Mark {
+    id: string;
+    surah_id: number;
+    ayah_id: number | null;
+    type: 'ayah' | 'surah';
+    created_at: string;
+}
+
 interface BookmarksContextType {
     bookmarks: Bookmark[];
     readingHistory: ReadingHistory[];
-    userStats: { totalAyahsRead: number; uniqueAyahsRead: number; currentStreak: number; lastActiveDate: string | null; dailyGoal: number; weeklyGoal: number; totalActiveDays: number };
+    marks: Mark[];
+    userStats: { totalAyahsRead: number; uniqueAyahsRead: number; currentStreak: number; lastActiveDate: string | null; totalActiveDays: number };
     dailyActivity: { date: string, count: number }[];
     isLoading: boolean;
-    setDailyGoal: (goal: number) => Promise<void>;
-    setWeeklyGoal: (goal: number) => Promise<void>;
     addBookmark: (surahId: number, verseKey: string) => Promise<void>;
     removeBookmark: (verseKey: string) => Promise<void>;
     isBookmarked: (verseKey: string) => boolean;
     updateReadingHistory: (surahId: number, verseKey: string) => Promise<void>;
+    toggleMark: (surahId: number, ayahId: number | null, type: 'ayah' | 'surah') => Promise<void>;
+    isMarked: (surahId: number, ayahId: number | null, type: 'ayah' | 'surah') => boolean;
 }
 
 const BookmarksContext = createContext<BookmarksContextType | undefined>(undefined);
@@ -37,6 +46,7 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
     const { toast } = useToast();
     const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
     const [readingHistory, setReadingHistory] = useState<ReadingHistory[]>([]);
+    const [marks, setMarks] = useState<Mark[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
     // Stats State
@@ -45,8 +55,6 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
         uniqueAyahsRead: 0,
         currentStreak: 0,
         lastActiveDate: null as string | null,
-        dailyGoal: 10,
-        weeklyGoal: 70,
         totalActiveDays: 0
     });
 
@@ -60,8 +68,9 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
         } else {
             setBookmarks([]);
             setReadingHistory([]);
+            setMarks([]);
             setDailyActivity([]);
-            setUserStats({ totalAyahsRead: 0, uniqueAyahsRead: 0, currentStreak: 0, lastActiveDate: null, dailyGoal: 10, weeklyGoal: 70, totalActiveDays: 0 });
+            setUserStats({ totalAyahsRead: 0, uniqueAyahsRead: 0, currentStreak: 0, lastActiveDate: null, totalActiveDays: 0 });
         }
     }, [user]);
 
@@ -89,7 +98,7 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
             // Fetch User Stats & Goal
             const { data: profileData, error: profileError } = await supabase
                 .from('profiles')
-                .select('total_ayahs_read, unique_ayahs_read, current_streak, last_active_date, daily_goal, weekly_goal')
+                .select('total_ayahs_read, unique_ayahs_read, current_streak, last_active_date')
                 .eq('id', user!.id)
                 .single();
 
@@ -103,8 +112,6 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
                     uniqueAyahsRead: profileData.unique_ayahs_read || 0,
                     currentStreak: profileData.current_streak || 0,
                     lastActiveDate: profileData.last_active_date,
-                    dailyGoal: profileData.daily_goal || 10,
-                    weeklyGoal: profileData.weekly_goal || 70,
                     totalActiveDays: 0 // Will update below
                 });
             }
@@ -129,6 +136,15 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
             if (!countError && activeCount !== null) {
                 setUserStats(prev => ({ ...prev, totalActiveDays: activeCount }));
             }
+
+            // Fetch Marks
+            const { data: marksData, error: marksError } = await supabase
+                .from('marks')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (marksError) throw marksError;
+            setMarks(marksData || []);
         } catch (error) {
             console.error('Error fetching user data:', error);
         } finally {
@@ -136,27 +152,6 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
         }
     };
 
-    const setDailyGoal = useCallback(async (goal: number) => {
-        if (!user) return;
-        setUserStats(prev => ({ ...prev, dailyGoal: goal }));
-        try {
-            await supabase.from('profiles').update({ daily_goal: goal }).eq('id', user.id);
-            toast({ title: "Goal Updated", description: `Daily target set to ${goal} Ayahs.` });
-        } catch (error) {
-            console.error("Error setting goal:", error);
-        }
-    }, [user, toast]);
-
-    const setWeeklyGoal = useCallback(async (goal: number) => {
-        if (!user) return;
-        setUserStats(prev => ({ ...prev, weeklyGoal: goal }));
-        try {
-            await supabase.from('profiles').update({ weekly_goal: goal }).eq('id', user.id);
-            toast({ title: "Goal Updated", description: `Weekly target set to ${goal} Ayahs.` });
-        } catch (error) {
-            console.error("Error setting weekly goal:", error);
-        }
-    }, [user, toast]);
 
     const addBookmark = useCallback(async (surahId: number, verseKey: string) => {
         if (!user) {
@@ -320,49 +315,42 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
                 return [{ surah_id: surahId, verse_key: verseKey, last_read_at: new Date().toISOString() }, ...filtered];
             });
 
-            // 2. Track Unique Verses & Read Count
+            // 2. Track Unique Verses & Read Count (Manual logic to avoid RPC 404 and Conflict noise)
             try {
-                // Attempt to insert into verses_read
-                const { error: uniqueError } = await supabase.from('verses_read').insert({
-                    user_id: user.id,
-                    verse_key: verseKey,
-                    read_count: 1
-                });
+                // Check if verse was already read
+                const { data: existing, error: fetchError } = await supabase
+                    .from('verses_read')
+                    .select('read_count')
+                    .eq('user_id', user.id)
+                    .eq('verse_key', verseKey)
+                    .maybeSingle();
 
-                if (!uniqueError) {
-                    // It was a new verse!
-                    setUserStats(prev => ({
-                        ...prev,
-                        uniqueAyahsRead: (prev.uniqueAyahsRead || 0) + 1
-                    }));
-                } else if (uniqueError.code === '23505') { // Unique violation
-                    // Verse exists, increment read_count
-                    try {
-                        const { error: rpcError } = await supabase.rpc('increment_verse_read_count', {
-                            p_user_id: user.id,
-                            p_verse_key: verseKey
-                        });
-                        if (rpcError) throw rpcError;
-                    } catch (err) {
-                        // Fallback: Fetch and Update manually
-                        const { data } = await supabase
-                            .from('verses_read')
-                            .select('read_count')
-                            .eq('user_id', user.id)
-                            .eq('verse_key', verseKey)
-                            .single();
+                if (fetchError) throw fetchError;
 
-                        if (data) {
-                            await supabase
-                                .from('verses_read')
-                                .update({ read_count: (data.read_count || 1) + 1 })
-                                .eq('user_id', user.id)
-                                .eq('verse_key', verseKey);
-                        }
+                if (!existing) {
+                    // New verse read - Insert
+                    const { error: insertError } = await supabase.from('verses_read').insert({
+                        user_id: user.id,
+                        verse_key: verseKey,
+                        read_count: 1
+                    });
+                    
+                    if (!insertError) {
+                        setUserStats(prev => ({
+                            ...prev,
+                            uniqueAyahsRead: (prev.uniqueAyahsRead || 0) + 1
+                        }));
                     }
+                } else {
+                    // Already read - Increment count
+                    await supabase
+                        .from('verses_read')
+                        .update({ read_count: (existing.read_count || 1) + 1 })
+                        .eq('user_id', user.id)
+                        .eq('verse_key', verseKey);
                 }
-            } catch (ignore) {
-                // Ignore other errors
+            } catch (err) {
+                console.error("Bookmarks: Error tracking verse read", err);
             }
 
 
@@ -436,9 +424,115 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
         }
     }, [user]);
 
+    const toggleMark = useCallback(async (surahId: number, ayahId: number | null, type: 'ayah' | 'surah') => {
+        if (!user) {
+            toast({ title: "Sign in required", description: "Please sign in to mark items." });
+            return;
+        }
+
+        const existingMark = marks.find(m => 
+            m.surah_id === surahId && 
+            m.ayah_id === ayahId && 
+            m.type === type
+        );
+
+        if (existingMark) {
+            // Remove mark (Optimistic)
+            setMarks(prev => prev.filter(m => m.id !== existingMark.id));
+            try {
+                const { error } = await supabase
+                    .from('marks')
+                    .delete()
+                    .eq('id', existingMark.id);
+                if (error) throw error;
+            } catch (error) {
+                console.error('Error removing mark:', error);
+                setMarks(prev => [...prev, existingMark]); // Revert
+            }
+        } else {
+            // Add mark (Optimistic)
+            
+            // Check for exclusivity conflicts
+            let markToReplace: Mark | undefined;
+            if (type === 'surah') {
+                // Exclusive Global Surah Mark
+                markToReplace = marks.find(m => m.type === 'surah');
+            } else if (type === 'ayah') {
+                // Exclusive Ayah Mark Per Surah
+                markToReplace = marks.find(m => m.type === 'ayah' && m.surah_id === surahId);
+            }
+
+            const tempId = Math.random().toString();
+            const newMark: Mark = {
+                id: tempId,
+                surah_id: surahId,
+                ayah_id: ayahId,
+                type,
+                created_at: new Date().toISOString()
+            };
+
+            // Update local state by removing collision and adding new
+            setMarks(prev => {
+                let filtered = prev;
+                if (markToReplace) {
+                    filtered = filtered.filter(m => m.id !== markToReplace!.id);
+                }
+                return [newMark, ...filtered];
+            });
+
+            try {
+                // DB Cleanup for collisions (Aggressive - based on DB rules, not just state)
+                if (type === 'surah') {
+                    // One surah mark globally
+                    await supabase.from('marks').delete().eq('user_id', user.id).eq('type', 'surah');
+                } else if (type === 'ayah') {
+                    // One ayah mark per surah
+                    await supabase.from('marks').delete().eq('user_id', user.id).eq('type', 'ayah').eq('surah_id', surahId);
+                }
+
+                // DB Insert
+                const { data, error } = await supabase
+                    .from('marks')
+                    .insert({ 
+                        user_id: user.id, 
+                        surah_id: surahId, 
+                        ayah_id: ayahId, 
+                        type 
+                    })
+                    .select()
+                    .single();
+                    
+                if (error) {
+                    console.error('Supabase Mark Insert Error:', error);
+                    throw error;
+                }
+                
+                // Replace temp with real
+                setMarks(prev => prev.map(m => m.id === tempId ? data : m));
+            } catch (error: any) {
+                console.error('Final Mark Update Error:', error);
+                fetchUserData(); // Re-sync with DB on failure
+                toast({ 
+                    variant: "destructive", 
+                    title: "Error", 
+                    description: error.message || "Failed to update marks." 
+                });
+            }
+        }
+    }, [user, marks, toast]);
+
+    const isMarked = useCallback((surahId: number, ayahId: number | null, type: 'ayah' | 'surah') => {
+        return marks.some(m => 
+            m.surah_id === surahId && 
+            m.ayah_id === ayahId && 
+            m.type === type
+        );
+    }, [marks]);
+
     const value = React.useMemo(() => ({
         bookmarks,
         readingHistory,
+        marks,
         userStats,
         dailyActivity,
         isLoading,
@@ -446,9 +540,9 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
         removeBookmark,
         isBookmarked,
         updateReadingHistory: updateReadingHistoryStable,
-        setDailyGoal,
-        setWeeklyGoal
-    }), [bookmarks, readingHistory, userStats, dailyActivity, isLoading, addBookmark, removeBookmark, isBookmarked, updateReadingHistoryStable, setDailyGoal, setWeeklyGoal]);
+        toggleMark,
+        isMarked
+    }), [bookmarks, readingHistory, marks, userStats, dailyActivity, isLoading, addBookmark, removeBookmark, isBookmarked, updateReadingHistoryStable, toggleMark, isMarked]);
 
     return (
         <BookmarksContext.Provider value={value}>

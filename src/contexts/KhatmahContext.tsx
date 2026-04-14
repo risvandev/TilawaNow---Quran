@@ -82,15 +82,28 @@ export const KhatmahProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
 
         const fetchProgress = async () => {
-            const { data, error } = await supabase
-                .from('khatmah_progress')
-                .select('*')
-                .eq('user_id', user.id)
-                .single();
+            try {
+                const { data, error } = await supabase
+                    .from('khatmah_progress')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .maybeSingle();
 
-            if (data) {
-                // @ts-ignore
-                setCurrentProgress(data);
+                if (error) {
+                    console.warn("Khatmah progress fetch failed or not found:", error.message);
+                    return;
+                }
+
+                if (data) {
+                    // @ts-ignore
+                    setCurrentProgress(data);
+                }
+            } catch (err) {
+                if (err instanceof TypeError && err.message === 'Failed to fetch') {
+                    console.error("Khatmah: Network error or Supabase unreachable.");
+                } else {
+                    console.error("Khatmah: Unexpected error fetching progress", err);
+                }
             }
         };
 

@@ -1,0 +1,266 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { BookOpen, ChevronRight, User, Settings, Play, Pause, Loader2, RotateCcw, Activity } from "lucide-react";
+import { POPULAR_SURAHS } from "@/lib/quran-api";
+import { Footer } from "@/components/layout/Footer";
+import { useAuth } from "@/contexts/AuthContext";
+import { InviteDialog } from "@/components/InviteDialog";
+import { supabase } from "@/lib/supabase";
+
+import { useBookmarks } from "@/contexts/BookmarksContext";
+import { useKhatmah } from "@/contexts/KhatmahContext";
+
+const Home = () => {
+  const { user } = useAuth();
+  const [readingProfile, setReadingProfile] = useState<{ last_read_surah: number; last_read_ayah: number } | null>(null);
+  const navigate = useRouter();
+  const { dailyActivity } = useBookmarks();
+  const { isKhatmahActive, currentProgress, isLoading, startKhatmah, stopKhatmah, restartKhatmah } = useKhatmah();
+  const [greeting, setGreeting] = useState("Good morning");
+
+  // Calculate Today's Activity
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayActivity = dailyActivity.find(d => d.date === todayStr);
+  const ayahsToday = todayActivity ? todayActivity.count : 0;
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) setGreeting("Good morning");
+    else if (hour >= 12 && hour < 17) setGreeting("Good afternoon");
+    else if (hour >= 17 && hour < 21) setGreeting("Good evening");
+    else setGreeting("Good night");
+  }, []);
+
+  useEffect(() => {
+    const fetchReadingProfile = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("user_reading_profile")
+        .select("last_read_surah, last_read_ayah")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (data) setReadingProfile(data);
+    };
+    fetchReadingProfile();
+  }, [user]);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 md:px-6 py-8 max-w-5xl">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 animate-fade-in">
+          <div className="w-full md:w-auto">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground">{greeting}</h1>
+                <p className="text-muted-foreground">Begin your Quran journey today</p>
+              </div>
+              <Link href="/settings" className="md:hidden shrink-0 mt-1">
+                <div className="w-10 h-10 rounded-full bg-secondary/50 hover:bg-secondary flex items-center justify-center border border-border/50 transition-colors">
+                  <Settings className="w-5 h-5 text-foreground" />
+                </div>
+              </Link>
+            </div>
+          </div>
+          {user ? (
+            <div className="flex gap-2 w-full md:w-auto justify-end">
+              <InviteDialog />
+              <Button asChild variant="outline" size="sm" className="gap-2 shrink-0 h-8 px-2 md:h-10 md:px-4 text-xs md:text-sm">
+                <Link href="/settings">
+                  <User className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  {user.user_metadata.full_name || "Profile"}
+                </Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2 w-full md:w-auto">
+              <InviteDialog />
+              <Button asChild variant="hero" size="sm" className="flex-1 md:flex-none">
+                <Link href="/signup">Sign Up</Link>
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Khatmah Widget */}
+        <div className="glass-card p-4 md:p-6 mb-8 animate-fade-in-up delay-100 bg-gradient-to-r from-primary/5 to-transparent border-primary/20">
+          <div className="flex items-center justify-between gap-2 md:gap-4">
+            <div className="flex items-center gap-2 md:gap-4 min-w-0">
+              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/20 flex items-center justify-center shrink-0 text-primary">
+                <BookOpen className="w-5 h-5 md:w-6 md:h-6" />
+              </div>
+              <div className="min-w-0 truncate">
+                <h3 className="text-base md:text-lg font-semibold text-foreground mb-0 md:mb-1 truncate">
+                  Khatmah
+                  <span className="hidden md:inline"> (Continuous Recitation)</span>
+                </h3>
+                <p className="text-sm text-muted-foreground hidden md:block">
+                  {currentProgress ? `Resume from Surah ${currentProgress.surah_id}` : "Start your journey from beginning to end"}
+                </p>
+                <p className="text-xs text-muted-foreground md:hidden truncate">
+                  {currentProgress ? `Surah ${currentProgress.surah_id}` : "Start journey"}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 md:gap-2 shrink-0">
+              {currentProgress && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 md:h-10 md:w-10 shrink-0"
+                  onClick={async () => {
+                    if (confirm("Are you sure you want to restart your Khatmah from the beginning?")) {
+                      await restartKhatmah();
+                    }
+                  }}
+                  disabled={isLoading}
+                  title="Restart Khatmah"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                </Button>
+              )}
+
+              <Button
+                variant={isKhatmahActive ? "destructive" : "default"}
+                onClick={async () => {
+                  if (isKhatmahActive) {
+                    stopKhatmah();
+                  } else {
+                    await startKhatmah();
+                    const targetSurah = currentProgress?.surah_id || 1;
+                    navigate.push(`/read/${targetSurah}`);
+                  }
+                }}
+                disabled={isLoading}
+                className="h-8 px-2.5 text-xs md:h-10 md:px-4 md:text-sm shrink-0"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-3.5 h-3.5 md:w-4 md:h-4 animate-spin" />
+                ) : isKhatmahActive ? (
+                  <>
+                    <Pause className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1 md:mr-2" />
+                    <span className="md:hidden">Stop</span>
+                    <span className="hidden md:inline">Stop</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1 md:mr-2" />
+                    <span className="md:hidden">{currentProgress ? "Resume" : "Start"}</span>
+                    <span className="hidden md:inline">{currentProgress ? "Resume Khatmah" : "Start Khatmah"}</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Continue Reading Card */}
+        <div className="glass-card p-4 md:p-6 mb-8 animate-fade-in-up delay-100">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <BookOpen className="w-6 h-6 text-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm text-muted-foreground mb-1">Continue where you left off</p>
+              <h3 className="text-lg font-semibold text-foreground mb-1">
+                {readingProfile ? "Recent Progress" : "Start New Journey"}
+              </h3>
+              <p className="text-xs text-muted-foreground mb-4">
+                {readingProfile ? "Jump back into your reading." : "Begin your spiritual journey today."}
+              </p>
+              <Button asChild variant="hero" size="sm">
+                <Link href={readingProfile ? `/read/${readingProfile.last_read_surah}?verse=${readingProfile.last_read_ayah}` : "/read"}>
+                  {readingProfile ? "Continue Reading" : "Start Reading"}
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Today's Activity Summary */}
+        {user && (
+          <div className="glass-card p-4 md:p-6 mb-8 animate-fade-in-up delay-200 bg-secondary/20 border-border/50">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <Activity className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground text-sm md:text-base">Today's Progress</h3>
+                <p className="text-xs md:text-sm text-muted-foreground">
+                  You have read <span className="text-primary font-bold">{ayahsToday}</span> ayahs today. Keep up the consistency!
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Quick Access */}
+        <div className="mb-8 animate-fade-in-up delay-300">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Quick Access</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {POPULAR_SURAHS.map((surah, index) => (
+              <Link
+                key={surah.number}
+                href={`/read/${surah.number}`}
+                className="surah-card flex items-center gap-3 opacity-0 animate-fade-in"
+                style={{ animationDelay: `${300 + index * 50}ms`, animationFillMode: "forwards" }}
+              >
+                <span className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
+                  {surah.number}
+                </span>
+                <div className="min-w-0">
+                  <h4 className="font-medium text-foreground truncate">{surah.name}</h4>
+                  <p className="text-xs text-muted-foreground">{surah.verses} verses</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Benefits Section */}
+        <div className="glass-card p-4 md:p-6 mb-8 animate-fade-in-up delay-400">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Benefits of Daily Reading</h2>
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
+              <p className="text-muted-foreground text-sm">
+                Reading Surah Al-Mulk before sleeping provides protection from the torment of the grave.
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
+              <p className="text-muted-foreground text-sm">
+                Surah Al-Kahf, read every Friday, brings light between two Fridays.
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
+              <p className="text-muted-foreground text-sm">
+                Surah Ya-Sin is the heart of the Quran and brings countless blessings.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Motivational Quote */}
+        <div className="ayah-highlight rounded-xl animate-fade-in-up delay-500">
+          <p className="font-arabic text-lg md:text-3xl lg:text-4xl leading-loose md:leading-[3] text-accent mb-4">
+            إِنَّ هَذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ
+          </p>
+          <p className="text-muted-foreground italic mb-2">
+            "Indeed, this Quran guides to that which is most suitable."
+          </p>
+          <p className="text-sm text-muted-foreground">— Surah Al-Isra (17:9)</p>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+};
+
+export default Home;

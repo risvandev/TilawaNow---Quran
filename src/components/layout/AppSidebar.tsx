@@ -1,5 +1,7 @@
+"use client";
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
-import { Link, useLocation } from "react-router-dom";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,9 +14,12 @@ import {
   Settings,
   HelpCircle,
   Lock,
+  LockOpen,
   ChevronRight,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { usePrefetch } from "@/hooks/use-prefetch";
+import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 
 interface SidebarContextType {
   isExpanded: boolean;
@@ -63,28 +68,42 @@ const bottomNavItems = [
 ];
 
 export const AppSidebar = () => {
-  const location = useLocation();
+  const pathname = usePathname();
+  const { prefetchRoute } = usePrefetch();
   const { isExpanded, setIsExpanded, isHovered, setIsHovered } = useSidebar();
 
   const shouldShowExpanded = isExpanded || isHovered;
 
   const renderNavItem = (item: typeof navItems[0]) => {
-    const isActive = location.pathname === item.path ||
-      (item.path === "/read" && location.pathname.startsWith("/read"));
+    const isActive = pathname === item.path ||
+      (item.path === "/read" && pathname.startsWith("/read"));
     return (
-      <Link key={item.path} to={item.path}>
+      <Link 
+        key={item.path} 
+        href={item.path}
+        onMouseEnter={() => prefetchRoute(item.path)}
+      >
         <Button
           variant={isActive ? "sidebarActive" : "sidebar"}
           size="default"
           className={cn(
-            "w-full transition-all duration-200",
-            !shouldShowExpanded && "justify-center px-2"
+            "w-full transition-all duration-300 justify-start h-12 rounded-xl",
+            // Button is inside a container with px-3 (12px). 
+            // Sidebar center is at 32px. 
+            // Button starts at 12px, so icon center should be at 20px from button start.
+            // Icon is 20px wide (w-5), so left padding should be 10px (px-2.5)
+            "px-2.5" 
           )}
         >
           <item.icon className={cn("w-5 h-5 shrink-0", isActive && "text-primary")} />
-          {shouldShowExpanded && (
-            <span className="ml-3 animate-fade-in truncate">{item.label}</span>
-          )}
+          <span 
+            className={cn(
+              "transition-all duration-300 ease-in-out overflow-hidden whitespace-nowrap",
+              shouldShowExpanded ? "max-w-[150px] opacity-100 ml-4" : "max-w-0 opacity-0 ml-0"
+            )}
+          >
+            {item.label}
+          </span>
         </Button>
       </Link>
     );
@@ -96,37 +115,44 @@ export const AppSidebar = () => {
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
         "fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border z-50",
-        "transition-all duration-300 ease-in-out flex flex-col",
-        shouldShowExpanded ? "w-64" : "w-[72px]"
+        "transition-all duration-300 ease-in-out flex flex-col overflow-y-auto overflow-x-hidden overscroll-contain scrollbar-hide",
+        shouldShowExpanded ? "w-56" : "w-16"
       )}
     >
       {/* Header with logo and toggle */}
-      <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
-        <Link to="/home" className="flex items-center gap-3">
+      <div className="flex items-center justify-between border-b border-sidebar-border min-h-[72px]">
+        <Link href="/home" className={cn(
+            "flex items-center transition-all duration-300",
+            // Logo is 32px, to center in 64px (w-16) sidebar, we use px-4 (16px)
+            "px-4" 
+        )}>
           <Logo
             showText={shouldShowExpanded}
-            textClassName="font-semibold text-foreground"
-            className="gap-3"
-            iconClassName="w-8 h-8 p-1.5"
+            textClassName="font-semibold text-foreground ml-4"
+            className="gap-0" // Gap is handled by text margin to stay stable
+            iconClassName="w-8 h-8 p-1.5 shrink-0"
           />
         </Link>
         <Button
           variant="ghost"
           size="iconSm"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="text-muted-foreground hover:text-foreground"
+          className={cn(
+            "text-muted-foreground hover:text-foreground transition-all duration-300 shrink-0",
+            shouldShowExpanded ? "opacity-100 pointer-events-auto translate-x-0" : "opacity-0 pointer-events-none -translate-x-2"
+          )}
         >
-          {isExpanded ? <Lock className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          {isExpanded ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
         </Button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-3 flex flex-col overflow-y-auto">
-        <div className="space-y-1">
+      <nav className="flex-1 flex flex-col overflow-y-auto py-3">
+        <div className="space-y-2 px-3">
           {navItems.map(renderNavItem)}
         </div>
 
-        <div className="mt-auto pt-4 space-y-1">
+        <div className="mt-auto pt-4 space-y-2 px-3">
           {bottomNavItems.map(renderNavItem)}
         </div>
       </nav>
@@ -134,12 +160,18 @@ export const AppSidebar = () => {
       {/* Footer */}
       <div className="p-4 border-t border-sidebar-border">
         <div className="h-5 flex items-center justify-center">
-          {shouldShowExpanded ? (
+          <div 
+            className={cn(
+              "transition-all duration-200 ease-in-out overflow-hidden flex justify-center",
+              shouldShowExpanded ? "max-w-[200px] opacity-100" : "max-w-[10px] opacity-0"
+            )}
+          >
             <p className="text-xs text-muted-foreground text-center animate-fade-in whitespace-nowrap">
               Free Forever • Made with ❤️
             </p>
-          ) : (
-            <div className="w-2 h-2 rounded-full bg-primary" />
+          </div>
+          {!shouldShowExpanded && (
+            <div className="w-2 h-2 rounded-full bg-primary animate-scale-in" />
           )}
         </div>
       </div>
@@ -153,15 +185,15 @@ interface MainLayoutProps {
 }
 
 const MobileBottomNav = () => {
-  const location = useLocation();
+  const pathname = usePathname();
 
   return (
     <div className="fixed bottom-0 left-0 right-0 h-16 pb-[env(safe-area-inset-bottom)] bg-background/80 backdrop-blur-lg border-t border-border z-[100] md:hidden flex items-center justify-around px-2">
       {navItems.map((item) => {
-        const isActive = location.pathname === item.path ||
-          (item.path === "/read" && location.pathname.startsWith("/read"));
+        const isActive = pathname === item.path ||
+          (item.path === "/read" && pathname.startsWith("/read"));
         return (
-          <Link key={item.path} to={item.path} className="flex-1">
+          <Link key={item.path} href={item.path} className="flex-1">
             <Button
               variant="ghost"
               size="icon"
@@ -184,6 +216,10 @@ export const MainLayout = ({ children, showSidebar = true }: MainLayoutProps) =>
   const { isExpanded, isHovered } = useSidebar();
   const shouldShowExpanded = isExpanded || isHovered;
 
+  // Audio player is always available since AudioPlayerProvider wraps SidebarProvider
+  const { isPlayerVisible } = useAudioPlayer();
+  const isPlayerActive = isPlayerVisible;
+
   if (!showSidebar) {
     return <main className="min-h-screen">{children}</main>;
   }
@@ -201,9 +237,9 @@ export const MainLayout = ({ children, showSidebar = true }: MainLayoutProps) =>
       <main
         className={cn(
           "flex-1 transition-all duration-300 min-h-screen",
-          "ml-0 md:ml-[72px]", // Base mobile: no margin, Base desktop: collapsed margin
-          shouldShowExpanded && "md:ml-64", // Expanded desktop margin
-          "pb-20 md:pb-0", // Add padding on bottom for mobile nav
+          "ml-0 md:ml-16", // Base mobile: no margin, Base desktop: collapsed margin
+          shouldShowExpanded && "md:ml-56", // Expanded desktop margin
+          isPlayerActive ? "pb-40 md:pb-0" : "pb-20 md:pb-0", // Extra padding when player active on mobile
           "max-md:!ml-0 max-md:!pl-0 max-md:w-full" // Force reset for mobile
         )}
       >
@@ -212,3 +248,4 @@ export const MainLayout = ({ children, showSidebar = true }: MainLayoutProps) =>
     </div>
   );
 };
+
