@@ -7,10 +7,7 @@ import {
     Play, Pause, SkipForward, SkipBack, X,
     Loader2, Repeat, Repeat1, Gauge
 } from "lucide-react";
-import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
-import { usePipPlayer } from "@/hooks/usePipPlayer";
-import PipPlayer from "@/components/player/PipPlayer";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -42,15 +39,7 @@ const GlobalAudioPlayer = () => {
         setLoopMode
     } = useAudioPlayer();
 
-    const { isPipActive, openPip, closePip } = usePipPlayer();
-
     if (!isPlayerVisible) return <FullPlayer />;
-
-    // Create a target for the PiP window portal if active
-    const pipTarget = typeof window !== 'undefined' && isPipActive 
-        ? window.documentPictureInPicture?.window?.document.getElementById('pip-player-root') 
-        : null;
-
 
     return (
         <>
@@ -179,34 +168,6 @@ const GlobalAudioPlayer = () => {
                             </div>
 
 
-                            {/* Pop-out to Floating window */}
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={openPip}
-                                className={cn(
-                                    "text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors h-8 w-8 rounded-lg",
-                                    isPipActive && "text-primary bg-primary/10"
-                                )}
-                                title="Open Floating Mini Player"
-                            >
-                                <svg 
-                                    xmlns="http://www.w3.org/2000/svg" 
-                                    width="16" 
-                                    height="16" 
-                                    viewBox="0 0 24 24" 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    strokeWidth="2" 
-                                    strokeLinecap="round" 
-                                    strokeLinejoin="round"
-                                >
-                                    <path d="M15 3h6v6" />
-                                    <path d="M10 14 21 3" />
-                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                                </svg>
-                            </Button>
-
                             {/* Close */}
                             <Button
                                 variant="ghost"
@@ -223,9 +184,6 @@ const GlobalAudioPlayer = () => {
 
             {/* Full Player Drawer */}
             <FullPlayer />
-
-            {/* Floating PiP Portal */}
-            {isPipActive && pipTarget && createPortal(<PipPlayer />, pipTarget)}
         </>
     );
 };

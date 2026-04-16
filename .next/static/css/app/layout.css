@@ -1380,9 +1380,6 @@ body{
 .max-h-screen{
   max-height: 100vh;
 }
-.max-h-full{
-  max-height: 100%;
-}
 .min-h-0{
   min-height: 0px;
 }
@@ -1549,9 +1546,6 @@ body{
 }
 .w-px{
   width: 1px;
-}
-.w-screen{
-  width: 100vw;
 }
 .min-w-0{
   min-width: 0px;
@@ -2928,9 +2922,6 @@ body{
 }
 .leading-tight{
   line-height: 1.25;
-}
-.leading-\[2\]{
-  line-height: 2;
 }
 .tracking-tight{
   letter-spacing: -0.025em;
@@ -5523,11 +5514,6 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   .md\:text-xs{
     font-size: 0.75rem;
     line-height: 1rem;
-  }
-
-  .md\:text-2xl{
-    font-size: 1.5rem;
-    line-height: 2rem;
   }
 
   .md\:leading-\[1\.8\]{
