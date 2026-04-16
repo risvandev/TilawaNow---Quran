@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "@/index.css";
 import { Providers } from "@/components/Providers";
 import { ClientLayout } from "@/components/layout/ClientLayout";
+import { Analytics } from "@vercel/analytics/react";
+
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -41,6 +43,7 @@ export default function RootLayout({
         <Providers>
           <ClientLayout>{children}</ClientLayout>
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
