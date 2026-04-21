@@ -916,7 +916,7 @@ const Settings = () => {
 
             <DialogTitle className="text-lg font-bold mb-2 flex items-center justify-center gap-2">
               <Heart className="w-5 h-5 text-primary fill-primary/20" />
-              Support Tadabbur
+              Support TilawaNow
             </DialogTitle>
 
             <DialogDescription className="text-muted-foreground text-xs mx-auto mb-4 leading-tight">

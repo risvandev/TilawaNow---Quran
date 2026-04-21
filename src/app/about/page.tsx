@@ -164,7 +164,7 @@ const About = () => {
       content: (
         <div className="space-y-4">
           <p>TilawaNow is built independently with a strong focus on craftsmanship, usability, and purpose.</p>
-          <p>Developed using modern technologies such as <b>React</b>, <b>Supabase</b>, and <b>AI systems</b> for assisted understanding.</p>
+          <p>Developed using modern technologies such as <b>React</b>, <b>Supabase</b>, and <b>AI systems (OpenRouter & Puter.js)</b> for assisted understanding.</p>
           <p className="text-xs uppercase tracking-widest text-muted-foreground mt-4">Goal: Purpose over trend-following.</p>
         </div>
       )

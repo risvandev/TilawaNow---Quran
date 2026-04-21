@@ -86,7 +86,6 @@ import { useBookmarks } from "@/contexts/BookmarksContext";
 import { useKhatmah } from "@/contexts/KhatmahContext";
 import { useReadingTracker } from "@/contexts/ReadingTrackerContext";
 import { useAICompanion } from "@/contexts/AICompanionContext";
-import { searchWithAI } from "@/lib/ai-service";
 import { supabase } from "@/lib/supabase";
 import { ReadingIndicator } from "@/components/ReadingIndicator";
 import Fuse from "fuse.js";
@@ -450,9 +449,6 @@ const SurahList = () => {
   const { data: surahs = [], isLoading: isSurahsLoading } = useSurahs();
   const { toggleMark, isMarked } = useBookmarks();
   const [searchQuery, setSearchQuery] = useState("");
-  const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
-  const [isSearchingAI, setIsSearchingAI] = useState(false);
-  const [aiMatches, setAiMatches] = useState<number[] | null>(null);
   const { isKhatmahActive, currentProgress, isLoading: isKhatmahLoading, startKhatmah, stopKhatmah, restartKhatmah } = useKhatmah();
   const router = useRouter();
   const { isExpanded, isHovered } = useSidebar();
@@ -460,62 +456,15 @@ const SurahList = () => {
 
   const loading = isSurahsLoading;
 
-  // Debounced AI Search
-  useEffect(() => {
-    const timer = setTimeout(async () => {
-      if (!searchQuery || searchQuery.length < 3) {
-        setAiSuggestion(null);
-        setAiMatches(null);
-        return;
-      }
-
-      setIsSearchingAI(true);
-      try {
-        const result = await searchWithAI(searchQuery, undefined, surahs);
-
-        if (result.suggestedQuery && result.suggestedQuery.toLowerCase() !== searchQuery.toLowerCase()) {
-          setAiSuggestion(result.suggestedQuery);
-        } else {
-          setAiSuggestion(null);
-        }
-
-        if (result.matchedSurahs && result.matchedSurahs.length > 0) {
-          setAiMatches(result.matchedSurahs);
-        }
-      } catch (error) {
-        console.error("AI Search Failed:", error);
-      } finally {
-        setIsSearchingAI(false);
-      }
-    }, 600);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery, surahs]);
-
   const fuse = new Fuse(surahs, {
     keys: ["name_simple", "name_arabic", "translated_name.name", "id", "revelation_place"],
     threshold: 0.4,
     distance: 100,
   });
 
-  const getFilteredSurahs = () => {
-    if (!searchQuery) return surahs;
-    if (aiMatches && aiMatches.length > 0) {
-      const aiResults = surahs.filter(s => aiMatches.includes(s.id));
-      aiResults.sort((a, b) => aiMatches.indexOf(a.id) - aiMatches.indexOf(b.id));
-      return aiResults;
-    }
-    return fuse.search(searchQuery).map(result => result.item);
-  };
-
-  const filteredSurahs = getFilteredSurahs();
-
-  const handleSuggestionClick = () => {
-    if (aiSuggestion) {
-      setSearchQuery(aiSuggestion);
-      setAiSuggestion(null);
-    }
-  };
+  const filteredSurahs = !searchQuery 
+    ? surahs 
+    : fuse.search(searchQuery).map(result => result.item);
 
   if (loading) {
     return (
@@ -598,24 +547,7 @@ const SurahList = () => {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-12 h-12 bg-secondary border-border text-foreground placeholder:text-muted-foreground"
         />
-        {isSearchingAI && (
-          <div className="absolute right-4 top-1/2 -translate-y-1/2">
-            <Loader2 className="w-4 h-4 animate-spin text-primary" />
-          </div>
-        )}
       </div>
-
-      {aiSuggestion && (
-        <div className="mb-6 flex items-center gap-2 animate-fade-in">
-          <span className="text-sm text-muted-foreground">Did you mean:</span>
-          <button
-            onClick={handleSuggestionClick}
-            className="text-sm font-medium text-primary hover:underline bg-primary/10 px-3 py-1 rounded-full hover:bg-primary/20 transition-colors"
-          >
-            {aiSuggestion}
-          </button>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {filteredSurahs.map((surah, index) => {

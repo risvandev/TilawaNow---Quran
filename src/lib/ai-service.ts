@@ -1,4 +1,5 @@
-import { Surah } from "./quran-api";
+import getPuter from "./puter-service";
+import { Surah, fetchTafsir, fetchSingleVerse, TAFSIR_RESOURCES } from "./quran-api";
 
 // Types
 export interface ChatMessage {
@@ -6,68 +7,98 @@ export interface ChatMessage {
     content: string;
 }
 
-export interface SearchResult {
-    suggestedQuery?: string;
-    matchedSurahs: number[];
-    explanation?: string;
+export type AIChatMode = 'Quick' | 'Detailed' | 'Research';
+
+export interface GroundingContext {
+    verseKey?: string;
+    surahId?: number;
+    mode: AIChatMode;
 }
 
 /**
- * Universal Streaming Chat calling backend API
+ * Universal Streaming Chat calling Puter.js
  */
 export const streamChatWithAI = async (
     messages: ChatMessage[],
-    onChunk: (chunk: string) => void
+    onChunk: (chunk: string) => void,
+    options: GroundingContext = { mode: 'Quick' }
 ): Promise<void> => {
-    try {
-        const apiUrl = (typeof window !== "undefined" ? window.location.origin : "") + "/api/chat";
-        const response = await fetch(apiUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ messages, stream: true }),
-        });
+    if (typeof window === "undefined") return;
 
-        if (!response.ok) {
-            const errData = await response.json().catch(() => ({}));
-            throw new Error(errData.error || "AI Service Unavailable");
+    try {
+        const puter = getPuter();
+        if (!puter) throw new Error("Puter.js SDK not initialized");
+
+        // Dynamic Configuration based on mode
+        const isAdvanced = options.mode !== 'Quick';
+        const model = isAdvanced ? 'gpt-4o' : 'gpt-4o-mini';
+        const tools = options.mode === 'Research' ? [{ type: "web_search" }] : [];
+
+        // Prepare Grounding if verseKey is provided
+        let enhancedMessages = [...messages];
+        if (options.verseKey) {
+            const groundingData = await prepareGroundingContext(options.verseKey);
+            if (groundingData) {
+                enhancedMessages = [
+                    { role: "system", content: groundingData },
+                    ...messages
+                ];
+            }
         }
 
-        const reader = response.body?.getReader();
-        if (!reader) throw new Error("Connection failed");
+        const responseStream = (await puter.ai.chat(enhancedMessages, { 
+            model,
+            stream: true,
+            tools
+        })) as any;
 
-        const decoder = new TextDecoder();
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            const chunk = decoder.decode(value, { stream: true });
-            if (chunk) onChunk(chunk);
+        for await (const part of responseStream) {
+            if (part?.text) {
+                onChunk(part.text);
+            }
         }
     } catch (error: any) {
         console.error("AI Stream Error:", error);
+        onChunk("\n\n[Connection interrupted. Please try again.]");
         throw error;
     }
 };
 
 /**
- * Single-shot Chat calling backend API
+ * Single-shot Chat calling Puter.js
  */
 export const chatWithAI = async (
-    messages: ChatMessage[]
+    messages: ChatMessage[],
+    options: GroundingContext = { mode: 'Quick' }
 ): Promise<string> => {
-    try {
-        const response = await fetch("/api/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ messages, stream: false }),
-        });
+    if (typeof window === "undefined") return "";
 
-        if (!response.ok) {
-            const errData = await response.json().catch(() => ({}));
-            throw new Error(errData.error || "AI Service Unavailable");
+    try {
+        const puter = getPuter();
+        if (!puter) throw new Error("Puter.js SDK not initialized");
+
+        const isAdvanced = options.mode !== 'Quick';
+        const model = isAdvanced ? 'gpt-4o' : 'gpt-4o-mini';
+        const tools = options.mode === 'Research' ? [{ type: "web_search" }] : [];
+
+        // Prepare Grounding
+        let enhancedMessages = [...messages];
+        if (options.verseKey) {
+            const groundingData = await prepareGroundingContext(options.verseKey);
+            if (groundingData) {
+                enhancedMessages = [
+                    { role: "system", content: groundingData },
+                    ...messages
+                ];
+            }
         }
 
-        const data = await response.json();
-        return data.content || "";
+        const response = (await puter.ai.chat(enhancedMessages, {
+            model,
+            stream: false,
+            tools
+        })) as any;
+        return response?.message?.content || response?.text || "";
     } catch (error: any) {
         console.error("AI Chat Error:", error);
         throw error;
@@ -75,31 +106,37 @@ export const chatWithAI = async (
 };
 
 /**
- * Semantic Surah Search using AI
+ * Fetches verified Quran text and classical Tafsir to ground the AI
  */
-export const searchWithAI = async (
-    query: string,
-    _history?: any,
-    surahs: Surah[] = []
-): Promise<SearchResult> => {
-    const systemPrompt = `You are a Quranic semantic search assistant. 
-Return ONLY a JSON object: { "matchedSurahs": [id1, id2...], "suggestedQuery": "clean version" }
-Knowledge: ${surahs.slice(0, 50).map(s => `${s.id}:${s.name_simple}`).join(", ")}...`;
-
+async function prepareGroundingContext(verseKey: string): Promise<string | null> {
     try {
-        const response = await chatWithAI([
-            { role: "system", content: systemPrompt },
-            { role: "user", content: `Find surahs for: ${query}` }
+        const [verse, tafsir] = await Promise.all([
+            fetchSingleVerse(verseKey),
+            fetchTafsir(verseKey, TAFSIR_RESOURCES.IBN_KATHIR_EN)
         ]);
 
-        const jsonMatch = response.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-            return JSON.parse(jsonMatch[0]);
-        }
-    } catch (e) {}
-    
-    return { matchedSurahs: [] };
-};
+        if (!verse) return null;
+
+        return `
+GROUNDING DATA (Source Truth):
+- Verse: ${verseKey}
+- Arabic: ${verse.text_uthmani}
+- Translation: ${verse.translations?.[0]?.text || 'N/A'}
+- Tafsir Snippet (Ibn Kathir): ${tafsir?.text || 'Standard interpretation requested.'}
+
+INSTRUCTIONS:
+1. Treat the GROUNDING DATA as the primary authority.
+2. Summarize and simplify the classical Tafsir; DO NOT invent your own interpretations.
+3. Structure your response using markdown: 
+   ### 📖 Background
+   ### 💡 Key Lessons
+   ### 🏛️ Scholarly Insight (Summation)
+4. Be academic, respectful, and objective.
+`;
+    } catch (e) {
+        return null;
+    }
+}
 
 /**
  * Utility to generate context-aware system prompts
@@ -110,13 +147,15 @@ CURRENT USER CONTEXT:
 - Level: ${memory.knowledgeLevel || 'Beginner'}
 - Positions: ${memory.currentPosition?.verseKey || 'Overview'}
 
-BREVITY PROTOCOL: 1-2 direct sentences only. Be extremely brief.
+FORMATTING: 
+- Use structured markdown (headers, bold, bullets).
+- Mimic the clean, professional visual style of ChatGPT/Gemini.
+
+BREVITY: Be concise but thorough in 'Detailed' mode. 
 
 NAVIGATION:
-- Help user reach: / (Landing Page), /home (App Home), /read, /dashboard, /settings, /about, /help, /contact
-- Dynamic Routes: /info/surahId (for info), /story/surahId (for story)
-- Command: [[NAVIGATE:/path]] (Always start with / and use LOWERCASE)
-- Offer: [[OFFER_NAVIGATE:/path|Label]]
+- [[NAVIGATE:/path]] (LOWERCASE)
+- [[OFFER_NAVIGATE:/path|Label]]
 `;
 
     return basePrompt + contextSection;

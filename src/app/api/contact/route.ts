@@ -55,7 +55,7 @@ export async function POST(req: Request) {
         <div style="padding: 30px; border: 1px solid #eee; border-top: 0; border-radius: 0 0 8px 8px;">
           <p>Assalamu alaikum <strong>${name}</strong>,</p>
           <p>Thank you for reaching out to us. We have received your message regarding "<strong>${subject}</strong>".</p>
-          <p>Our team typically responds within 24-48 hours. We appreciate your patience and your interest in Tadabbur.</p>
+          <p>Our team typically responds within 24-48 hours. We appreciate your patience and your interest in TilawaNow.</p>
           <div style="background: #f4f7f9; padding: 15px; border-radius: 5px; margin: 20px 0; font-style: italic;">
             "Your message: ${message.substring(0, 100)}${message.length > 100 ? '...' : ''}"
           </div>

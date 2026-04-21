@@ -1,7 +1,5 @@
 {
-  "/page": "app/page.js",
-  "/read/[[...surahId]]/page": "app/read/[[...surahId]]/page.js",
-  "/api/chat/route": "app/api/chat/route.js",
-  "/(protected)/settings/page": "app/(protected)/settings/page.js",
+  "/contact/page": "app/contact/page.js",
+  "/help/page": "app/help/page.js",
   "/(protected)/ai/page": "app/(protected)/ai/page.js"
 }

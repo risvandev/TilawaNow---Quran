@@ -93,20 +93,22 @@ const TermsConditions = () => {
       )
     },
     {
-      title: "6. AI Disclaimer",
+      title: "6. AI & Third-Party Service Disclaimer",
       content: (
         <div className="space-y-4">
-          <p>TilawaNow may provide AI-generated responses, summaries, explanations, or guidance. You understand and agree that:</p>
+          <p>TilawaNow may provide AI-generated responses using third-party services like OpenRouter and Puter.js. You understand and agree that:</p>
           <ul className="list-disc pl-5 space-y-1 text-sm md:text-base italic">
-            <li>AI output may be incomplete, inaccurate, outdated, or misleading</li>
-            <li>AI responses are generated automatically and may not reflect verified scholarship or authoritative interpretation</li>
-            <li>We do not guarantee the correctness, completeness, or suitability of any AI-generated content</li>
+            <li>AI output may be incomplete, inaccurate, or misleading</li>
+            <li>We do not guarantee the correctness of any AI-generated content</li>
             <li>You use AI features at your own discretion and risk</li>
           </ul>
-          <p className="font-bold text-foreground/80 mt-4 italic text-xs">
-            Do not rely on AI output for critical religious, legal, financial, medical, or personal decisions.
-          </p>
         </div>
+      )
+    },
+    {
+      title: "7. User Eligibility",
+      content: (
+        <p>You must be at least 13 years old to use TilawaNow. By using the platform, you represent that you meet this age requirement.</p>
       )
     },
     {
@@ -162,36 +164,48 @@ const TermsConditions = () => {
     {
       title: "13. Limitation of Liability",
       content: (
-        <p>To the fullest extent permitted by law, TilawaNow and its affiliates are not liable for any indirect, incidental, or consequential damages arising from your use of the service, including data loss, incorrect AI output, or misinterpretation of content. Your use of TilawaNow is at your own risk.</p>
+        <p>To the fullest extent permitted by law, TilawaNow is not liable for any indirect, incidental, or consequential damages arising from your use of the service. Your use of TilawaNow is at your own risk.</p>
       )
     },
     {
-      title: "14. Disclaimer of Warranties",
+      title: "14. Indemnification",
       content: (
-        <p>TilawaNow is provided on an “as is” and “as available” basis. We make no warranties, express or implied, including fitness for a particular purpose, accuracy, or non-infringement.</p>
+        <p>You agree to indemnify and hold harmless TilawaNow and its team from any claims, damages, liabilities, or expenses (including legal fees) arising from your use of the service or your violation of these Terms.</p>
       )
     },
     {
-      title: "15. Governing Law",
+      title: "16. Severability",
       content: (
-        <p>These Terms shall be governed by and interpreted in accordance with the laws of India. Any disputes shall be subject to the competent courts or legal forum in India, unless otherwise required by law.</p>
+        <p>If any provision of these Terms is found to be invalid or unenforceable by a court, the remaining provisions will continue in full force and effect.</p>
       )
     },
     {
-      title: "16. Changes to These Terms",
+      title: "17. Disclaimer of Warranties",
+      content: (
+        <p>TilawaNow is provided "as is". We make no warranties regarding accuracy or fitness for a particular purpose. Content is for educational use and does not constitute professional advice.</p>
+      )
+    },
+    {
+      title: "18. Governing Law",
+      content: (
+        <p>These Terms shall be governed by the laws of India. Any disputes shall be subject to the competent courts in India.</p>
+      )
+    },
+    {
+      title: "19. Changes to These Terms",
       content: (
         <p>We may update or modify these Terms at any time. Your continued use of TilawaNow after changes are posted means you accept the revised Terms.</p>
       )
     },
     {
-      title: "17. Contact Information",
+      title: "18. Contact Information",
       content: (
         <div className="space-y-4 text-sm md:text-base">
           <p>For questions about these Terms, contact us at:</p>
           <div className="flex flex-col gap-2 italic">
-            <a href="mailto:support@tilawaNow.com" className="font-semibold text-primary hover:underline flex items-center gap-2">
+            <a href="mailto:tilawanow@gmail.com" className="font-semibold text-primary hover:underline flex items-center gap-2">
               <Mail className="w-4 h-4" />
-              support@tilawaNow.com
+              tilawanow@gmail.com
             </a>
             <p className="text-muted-foreground text-xs font-mono lowercase">Website: TilawaNow.vercel.app</p>
           </div>

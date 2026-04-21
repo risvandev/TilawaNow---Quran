@@ -19,7 +19,7 @@ const stats = [
     description: "Chapters of wisdom",
   },
   {
-    icon: "/juz_icon-tadabbur.svg", // Custom Icon Path
+    icon: "/juz_icon-tilawanow.svg", // Custom Icon Path
     value: QURAN_STATS.totalJuz,
     isNumber: true,
     label: "Total Juz",

@@ -279,6 +279,35 @@ export const searchVerses = async (
   }
 };
 
+// Recommended Tafsir Resource IDs (from Quran.com API v4)
+export const TAFSIR_RESOURCES = {
+  IBN_KATHIR_EN: 169,
+  AL_MUYASSAR_AR: 16,
+  AL_JALALAYN_AR: 2,
+};
+
+/**
+ * Fetch Tafsir for a specific verse
+ * @param verseKey format "1:1"
+ * @param resourceId defaults to Ibn Kathir (English)
+ */
+export const fetchTafsir = async (
+  verseKey: string,
+  resourceId: number = TAFSIR_RESOURCES.IBN_KATHIR_EN
+): Promise<{ text: string; resource_name?: string } | null> => {
+  try {
+    const response = await fetch(`${BASE_URL}/tafsirs/${resourceId}/by_ayah/${verseKey}`);
+    const data = await response.json();
+    return {
+      text: data.tafsir.text,
+      resource_name: data.tafsir.resource_name
+    };
+  } catch (error) {
+    console.error(`Error fetching tafsir for ${verseKey}:`, error);
+    return null;
+  }
+};
+
 // Core Reciters with known good segment data
 // IDs based on Quran.com API v4
 export const AVAILABLE_RECITERS = [

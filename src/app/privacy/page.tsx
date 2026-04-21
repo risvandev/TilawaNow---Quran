@@ -128,10 +128,10 @@ const PrivacyPolicy = () => {
           {/* 3. AI Data Usage */}
           <section className="space-y-6">
             <h3 className="text-xl font-bold text-foreground border-b border-border pb-2 w-fit">3. AI Data Usage</h3>
-            <p>TilawaNow may use third-party AI services, including <span className="font-bold italic">OpenRouter</span>, to provide intelligent responses and assistance.</p>
+            <p>TilawaNow may use third-party AI services, including <span className="font-bold italic">OpenRouter</span> and <span className="font-bold italic">Puter.js</span>, to provide intelligent responses and assistance.</p>
             <p>When you use AI features:</p>
             <ul className="list-disc pl-5 space-y-1">
-              <li>Your prompts and related context may be sent to third-party AI providers for processing</li>
+              <li>Your prompts and related context may be sent to third-party AI providers (such as OpenAI, Anthropic, or others via OpenRouter and Puter.js) for processing</li>
               <li>These providers may temporarily process or retain data according to their own technical and policy terms</li>
               <li>AI systems are used to generate responses, support understanding, and improve the user experience</li>
             </ul>
@@ -170,7 +170,7 @@ const PrivacyPolicy = () => {
             <p>We may share information only with trusted service providers that help us operate TilawaNow, including:</p>
             <ul className="list-disc pl-5 space-y-2">
               <li><span className="font-bold">Supabase</span> – authentication, database, and backend services</li>
-              <li><span className="font-bold">OpenRouter</span> – AI processing and response generation</li>
+              <li><span className="font-bold">OpenRouter & Puter.js</span> – AI processing and response generation</li>
               <li><span className="font-bold">EmailJS</span> – sending emails and notifications</li>
               <li>Other infrastructure or security providers as needed to run the service</li>
             </ul>
@@ -204,13 +204,13 @@ const PrivacyPolicy = () => {
             <ul className="list-disc pl-5 space-y-1">
               <li>Access your personal data</li>
               <li>Correct inaccurate or incomplete data</li>
-              <li>Delete your data</li>
+              <li>Delete your data (Right to be Forgotten)</li>
               <li>Object to certain processing</li>
               <li>Withdraw consent where processing is based on consent</li>
-              <li>Request a copy of your data in a portable format, where technically feasible</li>
+              <li>Request a copy of your data in a portable format</li>
               <li>Restrict certain processing, where applicable</li>
             </ul>
-            <p>To exercise these rights, contact us using the details in the Contact section below.</p>
+            <p>To exercise these rights, contact us at <span className="font-mono">tilawanow@gmail.com</span>.</p>
             <p>We may need to verify your identity before fulfilling certain requests.</p>
           </section>
 
@@ -236,11 +236,21 @@ const PrivacyPolicy = () => {
             <p>If you believe a child has provided personal data to us, contact us immediately.</p>
           </section>
 
-          {/* 10. International */}
-          <section className="space-y-6">
-            <h3 className="text-xl font-bold text-foreground border-b border-border pb-2 w-fit">10. International Users</h3>
-            <p>TilawaNow may be accessed from different countries. Your information may be processed and stored in countries other than your own, including countries where data protection laws may be different from those in your jurisdiction.</p>
-            <p>By using TilawaNow, you consent to the transfer, storage, and processing of your information globally as necessary to provide the service.</p>
+          {/* 10. International - GDPR & CCPA */}
+          <section className="space-y-8">
+            <h3 className="text-xl font-bold text-foreground border-b border-border pb-2 w-fit">10. International & Regional Disclosures</h3>
+            
+            <div className="space-y-4">
+              <h4 className="font-bold text-foreground uppercase tracking-wider text-xs">GDPR (European Economic Area)</h4>
+              <p>For users in the EEA, our legal basis for processing your information depends on the context. Most processing is based on (a) performance of our contract with you (Terms of Service), (b) our legitimate interests in providing and improving the service, or (c) your explicit consent.</p>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="font-bold text-foreground uppercase tracking-wider text-xs">CCPA (California Consumer Privacy Act)</h4>
+              <p>We do not "sell" personal information as defined by the CCPA. We only share information with service providers to operate the platform. California residents have the right to request access to their data and its deletion twice per 12-month period.</p>
+            </div>
+
+            <p>TilawaNow may be accessed globally. Your information may be processed and stored in countries other than your own. By using TilawaNow, you consent to this global processing.</p>
           </section>
 
           {/* 11. Donations */}
@@ -285,11 +295,10 @@ const PrivacyPolicy = () => {
           {/* 14. Contact */}
           <section className="space-y-6">
             <h3 className="text-xl font-bold text-foreground border-b border-border pb-2 w-fit">14. Contact Us</h3>
-            <p>If you have questions, concerns, or requests regarding this Privacy Policy or your personal data, contact us at:</p>
+            <p>If you have questions, concerns, or requests regarding this Privacy Policy or your personal data (Data Controller: TilawaNow Team), contact us at:</p>
             <div className="space-y-1 italic text-foreground/90">
-              <p>Email: contact@quran.app</p>
+              <p>Email: tilawanow@gmail.com</p>
               <p>Website: TilawaNow.vercel.app</p>
-              <p>Support: support@tilawaNow.com</p>
             </div>
           </section>
 

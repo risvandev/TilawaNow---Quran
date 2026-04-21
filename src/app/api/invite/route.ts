@@ -50,7 +50,7 @@ export async function POST(req: Request) {
                       <tr>
                         <td style="padding-right:12px;">
                           <img src="https://raw.githubusercontent.com/tXHsesaMSeckjpitHoikGaqDGnfiuvnslva/Logo---Tadabbur---quran/refs/heads/main/tadabbur/favicon-160x160.png"
-                               alt="Tadabbur Logo"
+                               alt="TilawaNow Logo"
                                width="40"
                                style="display:block;height:auto;">
                         </td>

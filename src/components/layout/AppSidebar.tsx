@@ -114,7 +114,7 @@ export const AppSidebar = () => {
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
-        "fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border z-50",
+        "fixed left-0 top-0 h-screen bg-sidebar border-r border-sidebar-border z-[60]",
         "transition-all duration-300 ease-in-out flex flex-col overflow-y-auto overflow-x-hidden overscroll-contain scrollbar-hide",
         shouldShowExpanded ? "w-56" : "w-16"
       )}
