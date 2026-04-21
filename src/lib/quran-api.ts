@@ -1,4 +1,5 @@
 // Quran.com API Types and Utilities
+import { supabase } from "./supabase";
 
 export interface Surah {
   id: number;
@@ -178,14 +179,15 @@ export const fetchSingleVerse = async (
 // Fetch all verse audios for a chapter (with word-level timing segments)
 export const fetchChapterVerseAudios = async (
   surahNumber: number,
-  reciterId: number = 7 // Default to Mishary
+  reciterId: number = 7, // Default to Mishary
+  perPage: number = 300
 ): Promise<Map<string, { url: string; segments: number[][] }>> => {
   const audioMap = new Map<string, { url: string; segments: number[][] }>();
   try {
     // Use the verses endpoint with ?audio= param — this is the ONLY endpoint
     // that returns word-level timing segments for highlighting
     const response = await fetch(
-      `${BASE_URL}/verses/by_chapter/${surahNumber}?audio=${reciterId}&per_page=300&fields=text_uthmani`
+      `${BASE_URL}/verses/by_chapter/${surahNumber}?audio=${reciterId}&per_page=${perPage}&fields=text_uthmani`
     );
     const data = await response.json();
     if (data.verses) {
@@ -206,6 +208,16 @@ export const fetchChapterVerseAudios = async (
     console.error("Error fetching chapter verse audios:", error);
   }
   return audioMap;
+};
+
+// Fetch user's reading profile (last surah/ayah)
+export const fetchUserReadingProfile = async (userId: string) => {
+  const { data } = await supabase
+    .from('user_reading_profile')
+    .select('last_read_surah, last_read_ayah, last_read_timestamp')
+    .eq('user_id', userId)
+    .single();
+  return data;
 };
 
 // Fetch chapter audio (full surah)
@@ -281,6 +293,7 @@ export const AVAILABLE_RECITERS = [
 ];
 
 export const getPreferredReciterId = (): number => {
+  if (typeof window === "undefined") return 7; // Default for SSR
   const saved = localStorage.getItem("reciterId");
   return saved ? parseInt(saved, 10) : 7; // Default to Mishary Rashid Alafasy (ID 7)
 };

@@ -259,7 +259,7 @@ const AIAssistance = () => {
           )}
 
           {/* Message History */}
-          <div className="space-y-6 pb-20">
+          <div className="space-y-6 pb-32 md:pb-20">
             {messages.map((message, index) => {
               if (message.role === "assistant" && !message.content) return null;
               
@@ -296,7 +296,7 @@ const AIAssistance = () => {
         </div>
 
         {/* Input area */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-background via-background/95 to-transparent pt-10 pb-6 px-4">
+        <div className="fixed bottom-16 md:bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-background via-background/95 to-transparent pt-10 pb-6 px-4">
           <div className="max-w-3xl mx-auto relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 to-accent/30 rounded-2xl blur opacity-25 group-hover:opacity-100 transition duration-700" />
             <div className="relative">

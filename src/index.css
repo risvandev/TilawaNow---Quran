@@ -170,6 +170,28 @@
     font-family: var(--font-quran);
     direction: rtl;
     line-height: 2;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Professional Mushaf Layout */
+  .mushaf-layout {
+    direction: rtl;
+    text-align: center;
+    word-spacing: 0.15em;
+    line-height: 3.2;
+    font-size: 2.25rem;
+    padding: 2rem 1rem;
+  }
+
+  /* Responsive sizing for Mushaf Mode */
+  @media (max-width: 768px) {
+    .mushaf-layout {
+      font-size: 1.35rem;
+      line-height: 2.6;
+      padding: 1rem 0.5rem;
+      word-spacing: 0.1em;
+    }
   }
 
   /* Quran verse styling */
@@ -387,24 +409,8 @@
     display: inline-block;
   }
 
-  .word-highlight::after {
-    content: '';
-    position: absolute;
-    bottom: -8px;
-    left: 10%;
-    right: 10%;
-    height: 3px;
-    background: hsl(var(--primary));
-    border-radius: 999px;
-    box-shadow: 0 0 10px hsl(var(--primary) / 0.6);
-    animation: word-pulse 1.5s infinite ease-in-out;
-  }
 }
 
-@keyframes word-pulse {
-  0%, 100% { opacity: 1; transform: scaleX(1); }
-  50% { opacity: 0.7; transform: scaleX(1.1); }
-}
 
 /* Keyframe animations */
 @keyframes fadeIn {
@@ -612,4 +618,14 @@ body.night-mode::after {
 input[type="time"]::-webkit-calendar-picker-indicator {
   filter: invert(44%) sepia(87%) saturate(2252%) hue-rotate(172deg) brightness(91%) contrast(101%);
   cursor: pointer;
+}
+/* scrollbar-none utility */
+@layer utilities {
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
 }

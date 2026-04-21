@@ -22,7 +22,7 @@ interface ReadingTrackerContextType {
 
 const ReadingTrackerContext = createContext<ReadingTrackerContextType | undefined>(undefined);
 
-const FLUSH_INTERVAL = 15000; // 15 seconds
+const FLUSH_INTERVAL = 60000; // 60 seconds (optimized for free plan)
 
 export const ReadingTrackerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
@@ -36,6 +36,43 @@ export const ReadingTrackerProvider: React.FC<{ children: React.ReactNode }> = (
   // Track states for UI indicators (e.g. circles/checks)
   const [ayahStates, setAyahStates] = useState<Record<string, "seen" | "read" | "engaged" | null>>({});
 
+  // Circuit Breaker: immediately suspend RDS if Supabase is unreachable (CORS / ERR_FAILED)
+  // This keeps the console completely clean when running on localhost without Supabase whitelisting.
+  const isRDSSuspendedRef = useRef(false);
+
+  // Instead of an automated probe (which causes console noise), we use a "Lazy Circuit Breaker"
+  // that engages only when an actual write or read operation fails.
+  const handleRDSError = useCallback((err: any) => {
+    const errorCode = err?.code || "";
+    const status = err?.status || 0;
+    const message = err?.message || "";
+    const name = err?.name || "";
+    const statusText = err?.statusText || "";
+
+    const isAuthOrNetworkError =
+      status === 401 ||
+      status === 403 ||
+      status >= 400 || 
+      errorCode === "42501" || 
+      errorCode === "PGRST301" ||
+      errorCode === "ERR_NETWORK" ||
+      message.toLowerCase().includes("fetch") ||
+      message.toLowerCase().includes("cors") ||
+      message.toLowerCase().includes("unauthorized") ||
+      message.toLowerCase().includes("resource") || // ERR_INSUFFICIENT_RESOURCES
+      statusText === "Unauthorized" ||
+      name === "TypeError";
+
+    if (isAuthOrNetworkError || !err) {
+      if (!isRDSSuspendedRef.current) {
+        console.warn("[Supabase] RDS Connection issues detected. Suspending background sync to maintain performance and clean console.");
+        isRDSSuspendedRef.current = true;
+      }
+    } else {
+      console.warn("RDS: Unexpected error", err);
+    }
+  }, []);
+
   const getStatus = (score: number): "seen" | "read" | "engaged" => {
     if (score >= 4) return "engaged";
     if (score >= 2) return "read";
@@ -44,7 +81,7 @@ export const ReadingTrackerProvider: React.FC<{ children: React.ReactNode }> = (
 
   const flush = useCallback(async (overrideSessionId?: string) => {
     const sId = overrideSessionId || sessionIdRef.current;
-    if (!user || !sId || signalsBuffer.current.size === 0) return;
+    if (!user || !sId || signalsBuffer.current.size === 0 || isRDSSuspendedRef.current) return;
 
     const dataToFlush = Array.from(signalsBuffer.current.entries()).map(([key, signals]) => ({
       user_id: user.id,
@@ -79,14 +116,66 @@ export const ReadingTrackerProvider: React.FC<{ children: React.ReactNode }> = (
         }, { onConflict: "user_id" });
       }
     } catch (err) {
-      console.error("RDS: Flush failed", err);
-      // Optional: restore buffer on failure? usually better to just log and move on in high-volume systems
+      handleRDSError(err);
     }
   }, [user]);
 
-  const startSession = async (surahId: number) => {
-    if (!user) return null;
-    
+  const endSession = useCallback(async () => {
+    const sId = sessionIdRef.current;
+    if (!sId || isRDSSuspendedRef.current) return;
+
+    // Clear session state immediately to prevent re-entry
+    sessionIdRef.current = null;
+    setActiveSessionId(null);
+    activeSurahIdRef.current = null;
+
+    // Final flush of remaining signals
+    await flush(sId);
+
+    // If flush failed and suspended RDS, stop here to avoid more console noise
+    if (isRDSSuspendedRef.current) return;
+
+    try {
+      // Fetch session to calculate duration
+      const { data: sessionData, error: fetchError } = await supabase
+        .from("reading_sessions")
+        .select("start_time")
+        .eq("id", sId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+
+      let duration = 0;
+      if (sessionData) {
+        const start = new Date(sessionData.start_time).getTime();
+        const end = Date.now();
+        duration = Math.round((end - start) / 1000);
+      }
+
+      // Check again before update
+      if (isRDSSuspendedRef.current) return;
+
+      const { error: updateError } = await supabase
+        .from("reading_sessions")
+        .update({ 
+          end_time: new Date().toISOString(),
+          duration
+        })
+        .eq("id", sId);
+
+      if (updateError) throw updateError;
+    } catch (err) {
+      handleRDSError(err);
+    }
+  }, [flush, handleRDSError]);
+
+  const startSession = useCallback(async (surahId: number) => {
+    // Idempotent Guard: If a session for this surah is already active, don't restart it
+    if (sessionIdRef.current && activeSurahIdRef.current === surahId) {
+      console.log(`[ReadingTracker] Session for Surah ${surahId} is already active (${sessionIdRef.current}). Skipping restart.`);
+      return sessionIdRef.current;
+    }
+
     // Finalize previous if exists
     if (sessionIdRef.current) await endSession();
 
@@ -94,7 +183,7 @@ export const ReadingTrackerProvider: React.FC<{ children: React.ReactNode }> = (
       const { data, error } = await supabase
         .from("reading_sessions")
         .insert({
-          user_id: user.id,
+          user_id: user?.id,
           surah_id: surahId,
           start_time: new Date().toISOString()
         })
@@ -106,51 +195,13 @@ export const ReadingTrackerProvider: React.FC<{ children: React.ReactNode }> = (
       setActiveSessionId(data.id);
       sessionIdRef.current = data.id;
       activeSurahIdRef.current = surahId;
+      console.log(`[ReadingTracker] Started new session ${data.id} for Surah ${surahId}`);
       return data.id;
     } catch (err) {
-      console.error("RDS: Session start failed", err);
+      handleRDSError(err);
       return null;
     }
-  };
-
-  const endSession = async () => {
-    const sId = sessionIdRef.current;
-    if (!sId) return;
-
-    // Clear session state immediately to prevent re-entry
-    sessionIdRef.current = null;
-    setActiveSessionId(null);
-    activeSurahIdRef.current = null;
-
-    // Final flush of remaining signals
-    await flush(sId);
-
-    try {
-      // Fetch session to calculate duration
-      const { data: sessionData } = await supabase
-        .from("reading_sessions")
-        .select("start_time")
-        .eq("id", sId)
-        .single();
-      
-      let duration = 0;
-      if (sessionData) {
-        const start = new Date(sessionData.start_time).getTime();
-        const end = Date.now();
-        duration = Math.round((end - start) / 1000);
-      }
-
-      await supabase
-        .from("reading_sessions")
-        .update({ 
-          end_time: new Date().toISOString(),
-          duration
-        })
-        .eq("id", sId);
-    } catch (err) {
-      console.error("RDS: Session end failed", err);
-    }
-  };
+  }, [user, endSession, handleRDSError]);
 
   const logSignal = useCallback((surahId: number, ayahId: number, type: "visibility" | "interaction" | "scroll") => {
     const key = `${surahId}:${ayahId}`;

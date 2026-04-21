@@ -110,7 +110,7 @@ const Settings = () => {
             }
           }
           // Handle notifications
-          if (data.notifications_enabled !== null) setNotifications(data.notifications_enabled);
+          if (data.notifications_enabled !== null) { setNotifications(data.notifications_enabled); localStorage.setItem('site_notifications', String(data.notifications_enabled)); }
         } else {
           // If no profile or error, try local
           loadLocalSettings();
@@ -320,7 +320,7 @@ const Settings = () => {
               if (showMobileDetail) {
                 setShowMobileDetail(false);
               } else {
-                navigate(-1);
+                navigate.back();
               }
             }}
           >
@@ -414,7 +414,7 @@ const Settings = () => {
 
             {/* Help & Support (Mobile) */}
             <button
-              onClick={() => navigate("/help")}
+              onClick={() => navigate.push("/help")}
               className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 border border-transparent hover:border-border/50 transition-all group"
             >
               <div className="flex items-center gap-3">
@@ -428,7 +428,7 @@ const Settings = () => {
 
             {/* Contact (Mobile) */}
             <button
-              onClick={() => navigate("/contact")}
+              onClick={() => navigate.push("/contact")}
               className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 border border-transparent hover:border-border/50 transition-all group"
             >
               <div className="flex items-center gap-3">

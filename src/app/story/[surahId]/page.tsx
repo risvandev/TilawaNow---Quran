@@ -1,7 +1,6 @@
 "use client";
 
-
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { fetchSurah, fetchVerses, Surah, Verse } from "@/lib/quran-api";
@@ -23,16 +22,33 @@ const SurahStoryPage = () => {
     const [generatingStory, setGeneratingStory] = useState(false);
 
     // Persist translation settings
-    const translationId = parseInt(localStorage.getItem("quranTranslation") || "131");
-    const script = localStorage.getItem("quranScript") || "text_uthmani";
+    const [translationId, setTranslationId] = useState<number>(131);
+    const [script, setScript] = useState<string>("text_uthmani");
+    const [selectedLanguage, setSelectedLanguage] = useState<string>("English");
+    const [settingsLoaded, setSettingsLoaded] = useState(false);
+
+    // 0. Load settings from localStorage
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const savedTranslationId = parseInt(localStorage.getItem("quranTranslation") || "131");
+            const savedScript = localStorage.getItem("quranScript") || "text_uthmani";
+            const savedLanguage = localStorage.getItem("selectedTranslationName") || "English";
+            setTranslationId(savedTranslationId);
+            setScript(savedScript);
+            setSelectedLanguage(savedLanguage);
+            setSettingsLoaded(true);
+        }
+    }, []);
+
+    const sIdStr = typeof surahId === "string" ? surahId : Array.isArray(surahId) ? surahId[0] : "";
 
     // 1. Initial Load: Surah & Verses
     useEffect(() => {
         const loadInitialData = async () => {
-            if (!surahId) return;
+            if (!sIdStr || !settingsLoaded) return;
             setLoadingSurah(true);
             try {
-                const sId = parseInt(surahId);
+                const sId = parseInt(sIdStr);
                 const [surahData, versesData] = await Promise.all([
                     fetchSurah(sId),
                     fetchVerses(sId, translationId, 1, 300, script)
@@ -46,7 +62,7 @@ const SurahStoryPage = () => {
             }
         };
         loadInitialData();
-    }, [surahId, translationId, script]);
+    }, [sIdStr, translationId, script, settingsLoaded]);
 
     // 2. Load Story for Current Group
     useEffect(() => {
@@ -62,13 +78,13 @@ const SurahStoryPage = () => {
     const getCacheKey = (sId: string, groupIndex: number) => `story_group_${translationId}_${sId}_${groupIndex}`;
 
     const loadStoryForGroup = async (groupIndex: number) => {
-        if (!surahId) return;
+        if (!sIdStr) return;
 
         const groupVerses = getGroupVerses(groupIndex);
         if (groupVerses.length === 0) return;
 
-        const cacheKey = getCacheKey(surahId, groupIndex);
-        const cached = sessionStorage.getItem(cacheKey);
+        const cacheKey = getCacheKey(sIdStr, groupIndex);
+        const cached = typeof window !== "undefined" ? sessionStorage.getItem(cacheKey) : null;
 
         if (cached) {
             setStory(cached);
@@ -83,12 +99,11 @@ const SurahStoryPage = () => {
             // Combine translations
             const combinedText = groupVerses.map(v => v.translations?.[0]?.text.replace(/<[^>]*>/g, "")).join(" ");
             const verseRange = `${groupVerses[0].verse_key} - ${groupVerses[groupVerses.length - 1].verse_key}`;
-            const language = localStorage.getItem("selectedTranslationName") || "English";
 
-            const generated = await generateStoriesAI(combinedText, verseRange, language);
+            const generated = await generateStoriesAI(combinedText, verseRange, selectedLanguage);
 
             if (generated) {
-                sessionStorage.setItem(cacheKey, generated);
+                if (typeof window !== "undefined") sessionStorage.setItem(cacheKey, generated);
                 setStory(generated);
                 prefetchNext(groupIndex + 1);
             }
@@ -101,21 +116,20 @@ const SurahStoryPage = () => {
     };
 
     const prefetchNext = async (nextGroupIndex: number) => {
-        if (!surahId) return;
+        if (!sIdStr) return;
         const nextVerses = getGroupVerses(nextGroupIndex);
         if (nextVerses.length === 0) return;
 
-        const cacheKey = getCacheKey(surahId, nextGroupIndex);
-        if (sessionStorage.getItem(cacheKey)) return;
+        const cacheKey = getCacheKey(sIdStr, nextGroupIndex);
+        if (typeof window !== "undefined" && sessionStorage.getItem(cacheKey)) return;
 
         console.log(`Prefetching Chunk ${nextGroupIndex}...`);
         try {
             const combinedText = nextVerses.map(v => v.translations?.[0]?.text.replace(/<[^>]*>/g, "")).join(" ");
             const verseRange = `${nextVerses[0].verse_key} - ${nextVerses[nextVerses.length - 1].verse_key}`;
-            const language = localStorage.getItem("selectedTranslationName") || "English";
 
-            const generated = await generateStoriesAI(combinedText, verseRange, language);
-            if (generated) {
+            const generated = await generateStoriesAI(combinedText, verseRange, selectedLanguage);
+            if (generated && typeof window !== "undefined") {
                 sessionStorage.setItem(cacheKey, generated);
             }
         } catch (e) {
@@ -168,7 +182,7 @@ const SurahStoryPage = () => {
         );
     }
 
-    if (!surah || verses.length === 0) return <div>Surah not found.</div>;
+    if (!surah || verses.length === 0) return <div className="min-h-screen flex items-center justify-center">Surah not found.</div>;
 
     const currentGroupVerses = getGroupVerses(currentGroupIndex);
     const startVerseNum = currentGroupVerses[0]?.verse_number;
@@ -179,7 +193,7 @@ const SurahStoryPage = () => {
             {/* Header */}
             <div className="max-w-3xl w-full flex items-center justify-between mb-8">
                 <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground px-2 md:px-4">
-                    <Link href={`/read/${surahId}`}>
+                    <Link href={`/read/${sIdStr}`}>
                         <ChevronLeft className="w-4 h-4 md:mr-2" />
                         <span className="hidden md:inline">Back to Quran</span>
                     </Link>
@@ -236,7 +250,7 @@ const SurahStoryPage = () => {
                     variant="hero"
                     size="lg"
                     onClick={handleNext}
-                    disabled={(currentGroupIndex + 1) * GROUP_SIZE >= verses.length}
+                    disabled={(currentGroupIndex + 1) * GROUP_SIZE >= (verses?.length || 0)}
                     className="group shadow-lg shadow-primary/20"
                 >
                     Next Part
@@ -245,7 +259,7 @@ const SurahStoryPage = () => {
             </div>
 
             <div className="mt-8 text-xs text-muted-foreground">
-                Part {currentGroupIndex + 1} / {Math.ceil(verses.length / GROUP_SIZE)}
+                Part {currentGroupIndex + 1} / {Math.ceil((verses?.length || 0) / GROUP_SIZE)}
             </div>
 
         </div>

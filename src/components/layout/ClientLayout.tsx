@@ -2,7 +2,10 @@
 
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
 import { MainLayout } from "@/components/layout/AppSidebar";
+import FocusMode from "@/components/player/FocusMode";
+
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -22,5 +25,17 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     showSidebar = false;
   }
 
-  return <MainLayout showSidebar={showSidebar}>{children}</MainLayout>;
+  const { isFullPlayerOpen, isFocusMode } = useAudioPlayer();
+  const showSidebarFinal = showSidebar && !isFocusMode;
+
+  return (
+    <MainLayout showSidebar={showSidebarFinal}>
+      <div className={(isFullPlayerOpen || isFocusMode) ? "hidden" : "contents"}>
+        {children}
+      </div>
+      <FocusMode />
+    </MainLayout>
+  );
 }
+
+

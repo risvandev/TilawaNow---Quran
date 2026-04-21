@@ -286,7 +286,7 @@ const Dashboard = () => {
         )}
 
         {/* Main Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 mb-8 md:mb-10">
+        <div className="grid grid-cols-3 gap-3 md:gap-6 mb-8 md:mb-10">
           {[
             {
               label: "Ayahs Read Today",
@@ -321,11 +321,6 @@ const Dashboard = () => {
               className="glass-card p-3 md:p-6 hover-lift border border-border/50 relative overflow-hidden group animate-fade-in-up"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <div className={`absolute top-0 right-0 p-2 md:p-4 opacity-50 group-hover:opacity-100 transition-opacity`}>
-                <div className={`w-7 h-7 md:w-10 md:h-10 rounded-lg md:rounded-xl ${stat.bgColor} ${stat.borderColor} border flex items-center justify-center`}>
-                  <stat.icon className={`w-3.5 h-3.5 md:w-5 md:h-5 ${stat.color}`} />
-                </div>
-              </div>
               <div className="mt-1 md:mt-2">
                 <p className="text-muted-foreground font-medium text-[10px] md:text-sm mb-0.5 md:mb-1">{stat.label}</p>
                 <h3 className="text-lg md:text-3xl font-bold text-foreground mb-0.5 md:mb-1">{stat.value}</h3>
@@ -399,6 +394,7 @@ const Dashboard = () => {
                 Achievements
               </h2>
               <div className="grid grid-cols-2 gap-4">
+                {/* Achievements Grid with numbers replacing icons */}
                 {[
                   { icon: Calendar, label: "Active Days", value: `${userStats.totalActiveDays}`, unlocked: userStats.totalActiveDays > 0 },
                   { icon: Target, label: "Quran Read", value: `${((userStats.uniqueAyahsRead / QURAN_STATS.totalAyahs) * 100).toFixed(1)}%`, unlocked: userStats.uniqueAyahsRead > 0 },
@@ -406,8 +402,9 @@ const Dashboard = () => {
                   { icon: Award, label: "Total Ayahs", value: `${totalAyahsRead}`, unlocked: totalAyahsRead > 0 },
                 ].map((achievement, index) => (
                   <div key={index} className={`p-4 rounded-xl border flex flex-col items-center text-center justify-center gap-2 transition-all relative ${achievement.unlocked ? "bg-primary/5 border-primary/20" : "bg-muted/30 border-transparent opacity-50 grayscale"}`}>
-                    <div className="absolute top-3 right-3"><span className="text-xs font-bold text-primary">{achievement.value}</span></div>
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 ${achievement.unlocked ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}><achievement.icon className="w-5 h-5" /></div>
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-1 text-sm font-bold ${achievement.unlocked ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
+                      {achievement.value}
+                    </div>
                     <span className="text-sm font-bold text-foreground leading-tight">{achievement.label}</span>
                   </div>
                 ))}

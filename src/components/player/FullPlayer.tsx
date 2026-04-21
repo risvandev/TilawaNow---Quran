@@ -2,19 +2,27 @@
 
 import React from "react";
 import { useAudioPlayer } from "@/contexts/AudioPlayerContext";
-import { Drawer, DrawerContent, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+
 import {
     Play, Pause, SkipForward, SkipBack, X,
     Loader2, Repeat, Repeat1, Gauge, ChevronDown,
-    ListMusic
+    ListMusic, Volume2, Volume1, VolumeX
 } from "lucide-react";
+import * as Slider from "@radix-ui/react-slider";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
+    DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import ProgressBar from "./ProgressBar";
 import PlayerQueue from "./PlayerQueue";
@@ -40,17 +48,46 @@ const FullPlayer: React.FC = () => {
         setPlaybackRate,
         loopMode,
         setLoopMode,
+        volume,
+        setVolume,
     } = useAudioPlayer();
 
     const [showQueue, setShowQueue] = React.useState(false);
 
+    // Scroll lock and Fullscreen cleanup logic
+    React.useEffect(() => {
+        if (isFullPlayerOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+            if (document.fullscreenElement) {
+                try {
+                    document.exitFullscreen();
+                } catch (err) {
+                    console.error("Fullscreen exit failed", err);
+                }
+            }
+        }
+
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isFullPlayerOpen]);
+
+
     if (!currentVerseKey || !currentSurah) return null;
 
+
     return (
-        <Drawer open={isFullPlayerOpen} onOpenChange={setFullPlayerOpen}>
-            <DrawerContent className="max-h-[92vh] bg-background/98 backdrop-blur-2xl border-border/30 outline-none" aria-describedby={undefined}>
-                <DrawerTitle className="sr-only">Now Playing — {currentSurah.name_simple}</DrawerTitle>
-                <div className="flex flex-col h-full max-h-[90vh] overflow-hidden">
+        <Dialog open={isFullPlayerOpen} onOpenChange={setFullPlayerOpen}>
+            <DialogContent
+                className="fixed inset-0 h-screen w-screen z-[200] bg-background/100 backdrop-blur-3xl border-none outline-none rounded-none p-0 flex flex-col translate-x-0 translate-y-0 left-0 top-0 max-w-none duration-300 ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 [&>button]:hidden"
+                aria-describedby={undefined}
+            >
+
+                <DialogTitle className="sr-only">Now Playing — {currentSurah.name_simple}</DialogTitle>
+                <div className="flex flex-col h-full overflow-hidden">
+
                     {/* Handle / Collapse */}
                     <div className="flex items-center justify-between px-6 py-3 border-b border-border/20">
                         <Button
@@ -93,15 +130,18 @@ const FullPlayer: React.FC = () => {
                         </div>
 
                         {/* Current Ayah Display */}
-                        <div className="w-full max-w-lg mx-auto mb-8">
+                        <div className="w-full max-w-3xl mx-auto mb-8">
+
                             <div className="glass-card p-6 md:p-8 relative overflow-hidden">
                                 {/* Subtle gradient overlay */}
                                 <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent pointer-events-none" />
-                                
+
                                 {/* Arabic Text */}
                                 <div className="text-center mb-4 relative z-10" dir="rtl">
                                     {currentVerse?.words && currentVerse.words.length > 0 ? (
-                                        <p className="font-arabic text-xl md:text-3xl text-foreground leading-[2.5] inline">
+                                        <div className="font-arabic text-xl md:text-3xl text-foreground flex flex-wrap justify-center gap-x-2 gap-y-8 md:gap-y-12">
+
+
                                             {currentVerse.words
                                                 .filter(w => w.char_type_name !== "end")
                                                 .map((w, i) => {
@@ -112,6 +152,7 @@ const FullPlayer: React.FC = () => {
                                                             key={w.id || i}
                                                             className={cn(
                                                                 "inline-block mx-1 transition-all duration-200",
+
                                                                 isHighlighted && "word-highlight"
                                                             )}
                                                         >
@@ -119,7 +160,8 @@ const FullPlayer: React.FC = () => {
                                                         </span>
                                                     );
                                                 })}
-                                        </p>
+                                        </div>
+
                                     ) : (
                                         <p className="font-arabic text-xl md:text-3xl text-foreground leading-[2.5]">
                                             {currentVerse?.text_uthmani || ""}
@@ -248,6 +290,44 @@ const FullPlayer: React.FC = () => {
                             </Button>
                         </div>
 
+                        {/* Volume Control */}
+                        <div className="flex items-center justify-center gap-4 max-w-xs mx-auto mb-6">
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-10 w-10 text-muted-foreground hover:text-primary transition-colors rounded-lg flex-shrink-0"
+                                    >
+                                        {volume === 0 ? <VolumeX className="w-5 h-5" /> : 
+                                         volume < 0.5 ? <Volume1 className="w-5 h-5" /> : 
+                                         <Volume2 className="w-5 h-5" />}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent side="top" align="center" className="w-12 p-3 bg-background/95 backdrop-blur-md border-border/50 shadow-2xl rounded-2xl mb-2">
+                                    <div className="h-32 flex flex-col items-center">
+                                        <Slider.Root
+                                            className="relative flex flex-col items-center select-none touch-none w-5 h-full"
+                                            value={[volume * 100]}
+                                            max={100}
+                                            step={1}
+                                            orientation="vertical"
+                                            onValueChange={(vals) => setVolume(vals[0] / 100)}
+                                        >
+                                            <Slider.Track className="bg-muted-foreground/20 relative grow rounded-full w-[4px]">
+                                                <Slider.Range className="absolute bg-primary rounded-full w-full bottom-0" />
+                                            </Slider.Track>
+                                            <Slider.Thumb
+                                                className="block w-3.5 h-3.5 bg-white border-2 border-primary rounded-full hover:scale-110 active:scale-95 transition-all focus:outline-none shadow-lg cursor-pointer"
+                                                aria-label="Volume"
+                                            />
+                                        </Slider.Root>
+                                        <span className="text-[10px] font-bold mt-2 text-primary">{Math.round(volume * 100)}%</span>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+
                         {/* Queue Panel */}
                         {showQueue && (
                             <div className="w-full max-w-lg mx-auto glass-card overflow-hidden animate-fade-in">
@@ -256,8 +336,8 @@ const FullPlayer: React.FC = () => {
                         )}
                     </div>
                 </div>
-            </DrawerContent>
-        </Drawer>
+            </DialogContent>
+        </Dialog>
     );
 };
 

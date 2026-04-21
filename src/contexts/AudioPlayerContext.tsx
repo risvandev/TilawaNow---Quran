@@ -11,6 +11,7 @@ interface PersistedPlaybackState {
     wasPlaying: boolean;
     playbackRate: number;
     loopMode: 'NONE' | 'SURAH' | 'AYAH';
+    volume: number;
     timestamp: number;
 }
 
@@ -45,6 +46,11 @@ interface AudioPlayerContextType {
     loopMode: 'NONE' | 'SURAH' | 'AYAH';
     setLoopMode: (mode: 'NONE' | 'SURAH' | 'AYAH') => void;
     jumpToIndex: (index: number) => void;
+    preheatAudio: (verse: Verse, target?: 'ACTIVE' | 'INACTIVE' | 'PRIMARY' | 'SECONDARY') => void;
+    volume: number;
+    setVolume: (v: number) => void;
+    isFocusMode: boolean;
+    setFocusMode: (open: boolean) => void;
 }
 
 const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(undefined);
@@ -66,12 +72,14 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [isFullPlayerOpen, setFullPlayerOpen] = useState(false);
+    const [isFocusMode, setFocusMode] = useState(false);
 
     const [playlist, setPlaylist] = useState<Verse[]>([]);
     const [currentIndex, setCurrentIndex] = useState(-1);
     const [isContinuous, setIsContinuous] = useState(false);
     const [playbackRate, setPlaybackRateState] = useState(1);
     const [loopMode, setLoopMode] = useState<'NONE' | 'SURAH' | 'AYAH'>('NONE');
+    const [volume, setVolumeState] = useState(1.0);
 
     // Dual-Buffer Audio Strategy for Industry-Level Gapless Playback
     const primaryAudio = useRef<HTMLAudioElement | null>(null);
@@ -88,7 +96,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     // Derived state
     const currentVerse = currentIndex >= 0 && currentIndex < playlist.length ? playlist[currentIndex] : null;
-    const isPlayerVisible = currentVerseKey !== null && currentSurah !== null;
+    const isPlayerVisible = currentVerseKey !== null && currentSurah !== null && (isLoading || (duration > 0 && (isPlaying || currentTime > 0)));
 
     useEffect(() => {
         primaryAudio.current = new Audio();
@@ -98,7 +106,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         [primaryAudio.current, secondaryAudio.current].forEach(audio => {
             if (audio) {
                 audio.preload = "auto";
-                audio.volume = 1.0;
+                audio.volume = volume;
             }
         });
         
@@ -111,14 +119,38 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         };
     }, []);
 
+    // Sync volume changes to actual audio elements
+    useEffect(() => {
+        if (primaryAudio.current) primaryAudio.current.volume = volume;
+        if (secondaryAudio.current) secondaryAudio.current.volume = volume;
+    }, [volume]);
+
     const getActiveAudio = () => activeBuffer.current === 'PRIMARY' ? primaryAudio.current : secondaryAudio.current;
     const getInactiveAudio = () => activeBuffer.current === 'PRIMARY' ? secondaryAudio.current : primaryAudio.current;
+
+    // Helper for safe audio playback to prevent unhandled AbortError in console
+    const safePlay = useCallback(async (audioEl: HTMLAudioElement | null) => {
+        if (!audioEl) return;
+        try {
+            await audioEl.play();
+        } catch (err: any) {
+            // AbortError is expected when playback is quickly interrupted — ignore it
+            if (err?.name !== 'AbortError') {
+                console.error("Playback failed", err);
+            }
+        }
+    }, []);
 
     // --- Playback Rate Setter (also updates active audio) ---
     const setPlaybackRate = useCallback((rate: number) => {
         setPlaybackRateState(rate);
         const audio = getActiveAudio();
         if (audio) audio.playbackRate = rate;
+    }, []);
+
+    const setVolume = useCallback((v: number) => {
+        const newVolume = Math.max(0, Math.min(1, v));
+        setVolumeState(newVolume);
     }, []);
 
     // --- localStorage Persistence (throttled) ---
@@ -137,6 +169,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
                     wasPlaying: isPlaying,
                     playbackRate: playbackRate,
                     loopMode,
+                    volume,
                     timestamp: Date.now(),
                 };
                 if (state.surahId && state.verseKey) {
@@ -151,7 +184,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         if (currentVerseKey && currentSurah) {
             persistState();
         }
-    }, [currentVerseKey, currentSurah, isPlaying, currentIndex, loopMode, playbackRate, persistState]);
+    }, [currentVerseKey, currentSurah, isPlaying, currentIndex, loopMode, playbackRate, volume, persistState]);
 
     // --- BroadcastChannel Cross-Tab Sync ---
     useEffect(() => {
@@ -220,19 +253,31 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
     }, []);
 
+    const preheatAudio = useCallback((verse: Verse, target: 'ACTIVE' | 'INACTIVE' | 'PRIMARY' | 'SECONDARY' = 'INACTIVE') => {
+        let audio: HTMLAudioElement | null = null;
+        
+        if (target === 'ACTIVE') audio = getActiveAudio();
+        else if (target === 'INACTIVE') audio = getInactiveAudio();
+        else if (target === 'PRIMARY') audio = primaryAudio.current;
+        else if (target === 'SECONDARY') audio = secondaryAudio.current;
+
+        if (!audio || !verse?.audio?.url) return;
+
+        const url = verse.audio.url;
+        const fullUrl = url.startsWith('http') ? url : `https://verses.quran.com/${url}`;
+
+        if (audio.src !== fullUrl) {
+            console.log(`[AudioEngine] Preheating ${target}: ${verse.verse_key}`);
+            audio.src = fullUrl;
+            audio.preload = 'auto';
+            audio.load();
+        }
+    }, []);
+
     const prefetchNext = useCallback((nextIndex: number) => {
         const nextVerse = playlist[nextIndex];
-        const nextAudio = getInactiveAudio();
-        if (nextVerse?.audio?.url && nextAudio) {
-            const url = nextVerse.audio.url;
-            const fullUrl = url.startsWith('http') ? url : `https://verses.quran.com/${url}`;
-            // Only set if different to avoid reloading already buffered audio
-            if (nextAudio.src !== fullUrl) {
-                nextAudio.src = fullUrl;
-                nextAudio.load();
-            }
-        }
-    }, [playlist]);
+        if (nextVerse) preheatAudio(nextVerse);
+    }, [playlist, preheatAudio]);
 
     const playWithBuffer = useCallback(async (verse: Verse, seekToTime?: number) => {
         const audio = getActiveAudio();
@@ -243,21 +288,75 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
         const fullUrl = url.startsWith('http') ? url : `https://verses.quran.com/${url}`;
         
-        // Pause any currently playing audio on the OTHER buffer to prevent play() AbortError
+        // 1. FAST-PATH: Check if ACTIVE buffer already has this track pre-warmed
+        if (audio.src === fullUrl && audio.readyState >= 2) {
+            console.log(`[AudioEngine] Active Buffer Match for ${verse.verse_key}`);
+            setCurrentVerseKey(verse.verse_key);
+            setCurrentWordPosition(-1);
+            audio.playbackRate = playbackRate;
+            await safePlay(audio);
+            setIsPlaying(true);
+            setIsLoading(false);
+            
+            // Preload next into inactive
+            const currentIdx = playlist.findIndex(v => v.verse_key === verse.verse_key);
+            if (currentIdx >= 0 && currentIdx < playlist.length - 1) {
+                prefetchNext(currentIdx + 1);
+            }
+            return;
+        }
+
+        // 2. SWAP-PATH: Check if the inactive buffer ALREADY has this track preloaded
+        const inactiveAudio = getInactiveAudio();
+        if (inactiveAudio && inactiveAudio.src === fullUrl && inactiveAudio.readyState >= 2) {
+            console.log(`[AudioEngine] Instant Swap for ${verse.verse_key}`);
+            
+            // Pause current active if any (unlikely to be playing the same thing but safe)
+            if (audio && !audio.paused) audio.pause();
+            
+            // Swap buffers
+            activeBuffer.current = activeBuffer.current === 'PRIMARY' ? 'SECONDARY' : 'PRIMARY';
+            
+            setCurrentVerseKey(verse.verse_key);
+            setCurrentWordPosition(-1);
+            
+            const newActive = getActiveAudio();
+            if (newActive) {
+                newActive.playbackRate = playbackRate;
+                await safePlay(newActive);
+                setIsPlaying(true);
+                setIsLoading(false);
+                broadcast('PLAY', { surah: currentSurah, verseKey: verse.verse_key });
+                
+                // Preload next
+                const nextIdx = playlist.findIndex(v => v.verse_key === verse.verse_key) + 1;
+                if (nextIdx > 0 && nextIdx < playlist.length) {
+                    prefetchNext(nextIdx);
+                }
+                return;
+            }
+        }
+
+        // 2. Standard loading path if not preloaded
+        if (!audio) return;
+
+        // Pause any currently playing audio on the OTHER buffer
         const otherAudio = getInactiveAudio();
         if (otherAudio && !otherAudio.paused) {
             otherAudio.pause();
         }
 
-        // If the URL is already loaded in the active buffer (due to pre-loading), we just play it
         if (audio.src !== fullUrl) {
+            setIsLoading(true);
             audio.src = fullUrl;
+            audio.preload = 'auto';
             audio.load();
+        } else if (audio.readyState < 2) {
+            setIsLoading(true);
         }
 
         setCurrentVerseKey(verse.verse_key);
         setCurrentWordPosition(-1);
-        
         audio.playbackRate = playbackRate;
 
         // If seeking to a specific time, wait for metadata to be loaded
@@ -273,21 +372,14 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
             }
         }
 
-        try {
-            await audio.play();
-            setIsPlaying(true);
-            setIsLoading(false);
-            broadcast('PLAY', { surah: currentSurah, verseKey: verse.verse_key });
-        } catch (err: any) {
-            // AbortError is expected during gapless transitions — silently ignore
-            if (err?.name !== 'AbortError') {
-                console.error("Playback failed", err);
-            }
-        }
+        await safePlay(audio);
+        setIsPlaying(true);
+        setIsLoading(false);
+        broadcast('PLAY', { surah: currentSurah, verseKey: verse.verse_key });
 
-        // Proactive Pre-load Next after starting current
+        // Eagerly preload the next ayah into the inactive buffer while this one plays
         const nextIdx = playlist.findIndex(v => v.verse_key === verse.verse_key) + 1;
-        if (nextIdx < playlist.length) {
+        if (nextIdx > 0 && nextIdx < playlist.length) {
             prefetchNext(nextIdx);
         }
     }, [playbackRate, playlist, prefetchNext, broadcast, currentSurah]);
@@ -304,20 +396,53 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
 
         if (nextIndex !== -1) {
-            // Swap buffers for gapless transition
+            const nextVerse = playlist[nextIndex];
+            const nextUrl = nextVerse?.audio?.url;
+            const fullNextUrl = nextUrl
+                ? (nextUrl.startsWith('http') ? nextUrl : `https://verses.quran.com/${nextUrl}`)
+                : null;
+
+            // Stop the current buffer immediately
+            const currentAudio = getActiveAudio();
+            if (currentAudio && !currentAudio.paused) {
+                currentAudio.pause();
+            }
+
+            // Swap to the inactive buffer (which was being preloaded)
             activeBuffer.current = activeBuffer.current === 'PRIMARY' ? 'SECONDARY' : 'PRIMARY';
+            const nextAudio = getActiveAudio(); // Now points to the preloaded buffer
+
+            // Verify the preloaded buffer has the right track; if not, load it now
+            if (nextAudio && fullNextUrl && nextAudio.src !== fullNextUrl) {
+                nextAudio.src = fullNextUrl;
+                nextAudio.load();
+            }
+
             setCurrentIndex(nextIndex);
-            playWithBuffer(playlist[nextIndex]);
-            broadcast('TRACK_CHANGE', { surah: currentSurah, verseKey: playlist[nextIndex].verse_key });
-            
-            // Allow transitions again after 100ms
-            setTimeout(() => { isTransitioning.current = false; }, 100);
-        } else if (!isProactive) { // Only stop if it's the real end
+            setCurrentVerseKey(nextVerse.verse_key);
+            setCurrentWordPosition(-1);
+
+            if (nextAudio) {
+                nextAudio.playbackRate = playbackRate;
+                safePlay(nextAudio).then(() => {
+                    setIsPlaying(true);
+                    broadcast('TRACK_CHANGE', { surah: currentSurah, verseKey: nextVerse.verse_key });
+
+                    // Preload the one after next into the now-idle buffer
+                    if (nextIndex + 1 < playlist.length) {
+                        prefetchNext(nextIndex + 1);
+                    }
+                });
+            }
+
+            // Release the transition guard quickly
+            setTimeout(() => { isTransitioning.current = false; }, 50);
+        } else if (!isProactive) {
             setIsPlaying(false);
             onPlaylistEndRef.current?.();
             isTransitioning.current = false;
         }
-    }, [currentIndex, playlist, loopMode, playWithBuffer, broadcast, currentSurah]);
+    }, [currentIndex, playlist, loopMode, playbackRate, prefetchNext, broadcast, currentSurah]);
 
     // High-Precision Industry-Level Continuous Audio Monitoring
     useEffect(() => {
@@ -402,10 +527,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
                 if (loopMode === 'AYAH') {
                     playWithBuffer(playlist[currentIndex]);
                 } else if (isContinuous) {
-                    // Slight delay to ensure hardware buffer finishes and add natural rhythmic gap
-                    setTimeout(() => {
-                        playNext();
-                    }, 150);
+                    playNext();
                 } else {
                     setIsPlaying(false);
                 }
@@ -426,7 +548,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         if (!('mediaSession' in navigator)) return;
 
         const actionHandlers: [MediaSessionAction, MediaSessionActionHandler][] = [
-            ['play', () => { const a = getActiveAudio(); if (a) { a.play(); setIsPlaying(true); } }],
+            ['play', () => { const a = getActiveAudio(); if (a) { safePlay(a); setIsPlaying(true); } }],
             ['pause', () => { const a = getActiveAudio(); if (a) { a.pause(); setIsPlaying(false); } }],
             ['nexttrack', () => playNext()],
             ['previoustrack', () => playPrev()],
@@ -470,6 +592,9 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
             setCurrentIndex(saved.currentIndex);
             setPlaybackRateState(saved.playbackRate || 1);
             setLoopMode(saved.loopMode || 'NONE');
+            if (saved.volume !== undefined) {
+                setVolumeState(saved.volume);
+            }
 
             console.log(`[AudioEngine] Restored session: ${saved.surahData.name_simple} - Verse ${saved.verseKey}`);
         } catch {
@@ -477,7 +602,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
     }, []);
 
-    const playSurah = (surah: Surah, verses: Verse[], startVerseKey?: string) => {
+    const playSurah = useCallback((surah: Surah, verses: Verse[], startVerseKey?: string) => {
         setPlaylist(verses);
         setCurrentSurah(surah);
         setIsContinuous(true);
@@ -492,11 +617,14 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         const inactive = getInactiveAudio();
         if (inactive) { inactive.src = ""; inactive.load(); }
         
+        // Proactively preheat the first verse to eliminate transition lag
+        preheatAudio(verses[startIndex]);
+        
         playWithBuffer(verses[startIndex]);
         broadcast('TRACK_CHANGE', { surah, verseKey: verses[startIndex].verse_key });
-    };
+    }, [preheatAudio, playWithBuffer, broadcast]);
 
-    const playVerse = (verse: Verse, surah: Surah) => {
+    const playVerse = useCallback((verse: Verse, surah: Surah) => {
         setPlaylist([verse]);
         setCurrentSurah(surah);
         setIsContinuous(false);
@@ -504,20 +632,20 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         transitionRef.current = null;
         playWithBuffer(verse);
         broadcast('TRACK_CHANGE', { surah, verseKey: verse.verse_key });
-    };
+    }, [playWithBuffer, broadcast]);
 
-    const togglePlay = () => {
+    const togglePlay = useCallback(() => {
         const audio = getActiveAudio();
         if (!audio) return;
         if (isPlaying) {
             audio.pause();
             setIsPlaying(false);
         } else {
-            audio.play();
+            safePlay(audio);
             setIsPlaying(true);
             broadcast('PLAY', { surah: currentSurah, verseKey: currentVerseKey });
         }
-    };
+    }, [isPlaying, currentSurah, currentVerseKey, broadcast]);
 
     const onPlaylistEndRef = useRef<(() => void) | null>(null);
     const setOnPlaylistEnd = (cb: () => void) => { onPlaylistEndRef.current = cb; };
@@ -541,7 +669,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
     }, [playlist, playWithBuffer, broadcast, currentSurah]);
 
-    const closePlayer = () => {
+    const closePlayer = useCallback(() => {
         primaryAudio.current?.pause();
         secondaryAudio.current?.pause();
         setIsPlaying(false);
@@ -555,7 +683,7 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
         if (rafRef.current) cancelAnimationFrame(rafRef.current);
         localStorage.removeItem(STORAGE_KEY);
         broadcast('CLOSE');
-    };
+    }, [broadcast]);
 
     return (
         <AudioPlayerContext.Provider value={{
@@ -563,7 +691,8 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
             currentTime, duration, playlist, currentIndex,
             isPlayerVisible, isFullPlayerOpen, setFullPlayerOpen,
             playSurah, playVerse, togglePlay, playNext, playPrev, closePlayer, seek, jumpToIndex,
-            setOnPlaylistEnd, playbackRate, setPlaybackRate, loopMode, setLoopMode
+            setOnPlaylistEnd, playbackRate, setPlaybackRate, loopMode, setLoopMode, preheatAudio,
+            volume, setVolume, isFocusMode, setFocusMode
         }}>
             {children}
         </AudioPlayerContext.Provider>

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from './AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -60,6 +60,16 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
 
     // Activity Data for Chart
     const [dailyActivity, setDailyActivity] = useState<{ date: string, count: number }[]>([]);
+
+    // Buffering system to minimize Supabase calls
+    const BATCH_INTERVAL = 60000; // 60 seconds
+    const pendingStatsRef = useRef({
+        totalNewRead: 0,
+        uniqueVerses: new Set<string>(),
+        lastSurahId: null as number | null,
+        lastVerseKey: null as string | null,
+        hasChanges: false
+    });
 
     // Fetch data on mount or user change
     useEffect(() => {
@@ -298,130 +308,159 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
     useEffect(() => { userStatsRef.current = userStats; }, [userStats]);
     useEffect(() => { dailyActivityRef.current = dailyActivity; }, [dailyActivity]);
 
+    // Robust Flush Logic: Syncs accumulated local progress to Supabase in a single batch
+    const flushToSupabase = useCallback(async () => {
+        const stats = pendingStatsRef.current;
+        if (!user || !stats.hasChanges) return;
+
+        // Reset buffer immediately to prevent overlapping flushes
+        const totalToSync = stats.totalNewRead;
+        const uniqueList = Array.from(stats.uniqueVerses);
+        const lastSurah = stats.lastSurahId;
+        const lastKey = stats.lastVerseKey;
+        
+        pendingStatsRef.current = {
+            totalNewRead: 0,
+            uniqueVerses: new Set<string>(),
+            lastSurahId: null,
+            lastVerseKey: null,
+            hasChanges: false
+        };
+
+        try {
+            const today = new Date().toISOString().split('T')[0];
+
+            // 1. Update Detailed History (Always Upsert latest for each surah)
+            if (lastSurah && lastKey) {
+                await supabase.from('reading_history').upsert(
+                    { user_id: user.id, surah_id: lastSurah, verse_key: lastKey, last_read_at: new Date().toISOString() },
+                    { onConflict: 'user_id, surah_id' }
+                );
+            }
+
+            // 2. Track Unique Verses Read
+            if (uniqueList.length > 0) {
+                const upsertData = uniqueList.map(vKey => ({
+                    user_id: user.id,
+                    verse_key: vKey,
+                    read_count: 1 // Default if new, won't easily increment on Conflict without RPC
+                }));
+                await supabase.from('verses_read').upsert(upsertData, { onConflict: 'user_id, verse_key' });
+            }
+
+            // 3. Update Daily Activity (Add the newly read count to the total for today)
+            const { data: currentDay } = await supabase
+                .from('daily_activity')
+                .select('ayahs_count')
+                .eq('user_id', user.id)
+                .eq('date', today)
+                .maybeSingle();
+
+            const existingCount = currentDay?.ayahs_count || 0;
+            await supabase.from('daily_activity').upsert({
+                user_id: user.id,
+                date: today,
+                ayahs_count: existingCount + totalToSync
+            }, { onConflict: 'user_id, date' });
+
+            // 4. Update Main Profile Stats
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('total_ayahs_read, current_streak, last_active_date')
+                .eq('id', user.id)
+                .single();
+
+            if (profile) {
+                const lastActive = profile.last_active_date ? new Date(profile.last_active_date).toDateString() : null;
+                const todayDate = new Date().toDateString();
+                
+                let newStreak = profile.current_streak || 0;
+                if (lastActive !== todayDate) {
+                    const yesterday = new Date();
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    newStreak = (lastActive === yesterday.toDateString()) ? (newStreak + 1) : 1;
+                }
+
+                await supabase.from('profiles').update({
+                    total_ayahs_read: (profile.total_ayahs_read || 0) + totalToSync,
+                    current_streak: newStreak,
+                    last_active_date: new Date().toISOString()
+                }).eq('id', user.id);
+            }
+        } catch (error: any) {
+            // Silence expected 401/403 or network errors to keep console clean
+            const isAuthOrNetworkError =
+              error?.status === 401 ||
+              error?.status === 403 ||
+              error?.code === "42501" ||
+              error?.message?.includes("fetch") ||
+              error?.message?.includes("CORS") ||
+              error?.message?.includes("Unauthorized");
+
+            if (!isAuthOrNetworkError) {
+              console.error('Bookmarks: Critical Background Sync Error', error);
+            }
+        }
+    }, [user]);
+
+    // Periodic Background Sync
+    useEffect(() => {
+        const interval = setInterval(flushToSupabase, BATCH_INTERVAL);
+        return () => {
+            clearInterval(interval);
+            // Final attempt to flush on unmount/close
+            if (pendingStatsRef.current.hasChanges) flushToSupabase();
+        };
+    }, [flushToSupabase]);
+
+    // Fast, Local-First progress tracking
     const updateReadingHistoryStable = useCallback(async (surahId: number, verseKey: string) => {
         if (!user) return;
 
-        try {
-            // 1. Upsert Reading History (DB + Local)
-            const { error: historyError } = await supabase.from('reading_history').upsert(
-                { user_id: user.id, surah_id: surahId, verse_key: verseKey, last_read_at: new Date().toISOString() },
-                { onConflict: 'user_id, surah_id' }
-            );
+        const today = new Date().toISOString().split('T')[0];
 
-            if (historyError) throw historyError;
+        // --- PHASE 1: Instant Local UI Updates ---
+        
+        // 1. Update History List
+        setReadingHistory(prev => {
+            const filtered = prev.filter(h => h.surah_id !== surahId);
+            return [{ surah_id: surahId, verse_key: verseKey, last_read_at: new Date().toISOString() }, ...filtered];
+        });
 
-            setReadingHistory(prev => {
-                const filtered = prev.filter(h => h.surah_id !== surahId);
-                return [{ surah_id: surahId, verse_key: verseKey, last_read_at: new Date().toISOString() }, ...filtered];
-            });
-
-            // 2. Track Unique Verses & Read Count (Manual logic to avoid RPC 404 and Conflict noise)
-            try {
-                // Check if verse was already read
-                const { data: existing, error: fetchError } = await supabase
-                    .from('verses_read')
-                    .select('read_count')
-                    .eq('user_id', user.id)
-                    .eq('verse_key', verseKey)
-                    .maybeSingle();
-
-                if (fetchError) throw fetchError;
-
-                if (!existing) {
-                    // New verse read - Insert
-                    const { error: insertError } = await supabase.from('verses_read').insert({
-                        user_id: user.id,
-                        verse_key: verseKey,
-                        read_count: 1
-                    });
-                    
-                    if (!insertError) {
-                        setUserStats(prev => ({
-                            ...prev,
-                            uniqueAyahsRead: (prev.uniqueAyahsRead || 0) + 1
-                        }));
-                    }
-                } else {
-                    // Already read - Increment count
-                    await supabase
-                        .from('verses_read')
-                        .update({ read_count: (existing.read_count || 1) + 1 })
-                        .eq('user_id', user.id)
-                        .eq('verse_key', verseKey);
-                }
-            } catch (err) {
-                console.error("Bookmarks: Error tracking verse read", err);
-            }
-
-
-            // 3. Calculate New Stats using Refs (Current State)
-            const today = new Date().toISOString().split('T')[0];
-
-            // --- Activity Calculation ---
-            const currentActivity = dailyActivityRef.current;
-            const existingToday = currentActivity.find(d => d.date === today);
-            // Increment count safely
-            const newDailyCount = (existingToday?.count || 0) + 1;
-
-            // Optimistic Activity Update
-            setDailyActivity(prev => {
-                const others = prev.filter(d => d.date !== today);
-                return [...others, { date: today, count: newDailyCount }].sort((a, b) => a.date.localeCompare(b.date));
-            });
-
-            // DB Activity Update (Fire & Forget)
-            supabase.from('daily_activity').upsert({
-                user_id: user.id,
-                date: today,
-                ayahs_count: newDailyCount
-            }, { onConflict: 'user_id, date' }).then(res => {
-                if (res.error) console.error("Error updating daily activity:", res.error);
-            });
-
-            // --- User Stats Calculation ---
-            const currentStats = userStatsRef.current;
-            const lastActive = currentStats.lastActiveDate ? new Date(currentStats.lastActiveDate).toDateString() : null;
+        // 2. Update Stats (Optimistic Local Logic)
+        setUserStats(prev => {
+            const lastActive = prev.lastActiveDate ? new Date(prev.lastActiveDate).toDateString() : null;
             const todayDate = new Date().toDateString();
-
-            let newStreak = currentStats.currentStreak;
+            let newStreak = prev.currentStreak;
             if (lastActive !== todayDate) {
                 const yesterday = new Date();
                 yesterday.setDate(yesterday.getDate() - 1);
-                if (lastActive === yesterday.toDateString()) {
-                    newStreak += 1;
-                } else {
-                    newStreak = 1;
-                }
+                newStreak = (lastActive === yesterday.toDateString()) ? (newStreak + 1) : 1;
             }
 
-            const newTotalRead = currentStats.totalAyahsRead + 1;
-            const wasActiveToday = lastActive === todayDate;
-            const newTotalActiveDays = wasActiveToday ? currentStats.totalActiveDays : (currentStats.totalActiveDays + 1);
-
-            // Optimistic Stats Update (Functional update still good practice, but we base logic on Ref for consistency if needed)
-            // Here we use the calculated values to ensure DB and State match
-            setUserStats(prev => ({
+            return {
                 ...prev,
-                totalAyahsRead: newTotalRead,
+                totalAyahsRead: prev.totalAyahsRead + 1,
                 currentStreak: newStreak,
                 lastActiveDate: new Date().toISOString(),
-                totalActiveDays: newTotalActiveDays
-            }));
+                totalActiveDays: (lastActive === todayDate) ? prev.totalActiveDays : (prev.totalActiveDays + 1)
+            };
+        });
 
-            // DB Profile Update
-            if (lastActive !== todayDate || true) {
-                supabase.from('profiles').update({
-                    total_ayahs_read: newTotalRead,
-                    current_streak: newStreak,
-                    last_active_date: new Date().toISOString()
-                }).eq('id', user.id).then(res => {
-                    if (res.error) console.error("Error updating profile stats:", res.error);
-                });
-            }
+        // 3. Update Chart Activity
+        setDailyActivity(prev => {
+            const existingToday = prev.find(d => d.date === today);
+            const others = prev.filter(d => d.date !== today);
+            return [...others, { date: today, count: (existingToday?.count || 0) + 1 }].sort((a, b) => a.date.localeCompare(b.date));
+        });
 
-        } catch (error) {
-            console.error('Error updating history:', error);
-        }
+        // --- PHASE 2: Silent Background Buffering ---
+        pendingStatsRef.current.totalNewRead += 1;
+        pendingStatsRef.current.uniqueVerses.add(verseKey);
+        pendingStatsRef.current.lastSurahId = surahId;
+        pendingStatsRef.current.lastVerseKey = verseKey;
+        pendingStatsRef.current.hasChanges = true;
+
     }, [user]);
 
     const toggleMark = useCallback(async (surahId: number, ayahId: number | null, type: 'ayah' | 'surah') => {

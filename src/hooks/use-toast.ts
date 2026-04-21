@@ -135,6 +135,13 @@ function dispatch(action: Action) {
 type Toast = Omit<ToasterToast, "id">;
 
 function toast({ ...props }: Toast) {
+  if (typeof window !== "undefined") {
+    const isSilent = localStorage.getItem("site_notifications") === "false";
+    if (isSilent) {
+      return { id: "silenced", dismiss: () => {}, update: () => {} };
+    }
+  }
+
   const id = genId();
 
   const update = (props: ToasterToast) =>
