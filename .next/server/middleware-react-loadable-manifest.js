@@ -1,1 +1,0 @@
-self.__REACT_LOADABLE_MANIFEST="{\"lib\\\\puter-service.ts -> @heyputer/puter.js\":{\"id\":\"lib\\\\puter-service.ts -> @heyputer/puter.js\",\"files\":[\"static/chunks/_app-pages-browser_node_modules_heyputer_puter_js_src_index_js.js\"]}}"

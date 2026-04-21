@@ -30,5 +30,10 @@ dist-ssr
 *.sln
 *.sw?
 
+# Next.js build output
+.next/
+out/
+build/
+
 .env
 .env*

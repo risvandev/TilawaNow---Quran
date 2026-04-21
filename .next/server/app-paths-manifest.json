@@ -1,5 +1,0 @@
-{
-  "/contact/page": "app/contact/page.js",
-  "/help/page": "app/help/page.js",
-  "/(protected)/ai/page": "app/(protected)/ai/page.js"
-}
