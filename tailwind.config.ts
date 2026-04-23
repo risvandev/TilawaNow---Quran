@@ -121,6 +121,10 @@ export default {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
         },
+        "slow-zoom": {
+          "0%": { transform: "scale(1)" },
+          "100%": { transform: "scale(1.1)" },
+        },
       },
       animation: {
         "spin-slow": "spin 3s linear infinite",
@@ -135,6 +139,7 @@ export default {
         "float": "float 3s ease-in-out infinite",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
         "shimmer": "shimmer 2s linear infinite",
+        "slow-zoom": "slow-zoom 20s ease-in-out infinite alternate",
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",

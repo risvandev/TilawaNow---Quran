@@ -29,7 +29,7 @@ export const HeroSection = () => {
           <Logo
             className="gap-3"
             iconClassName="w-8 h-8 md:w-12 md:h-12 p-1 md:p-1.5"
-            textClassName="font-bold text-lg md:text-2xl text-foreground"
+            textClassName="font-bold text-base md:text-2xl text-foreground"
             arabicClassName="text-xl md:text-3xl"
           />
         </Link>
