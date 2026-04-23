@@ -25,7 +25,7 @@ export const HeroSection = () => {
 
       {/* Navbar */}
       <nav className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-3 py-4 md:px-6 md:py-6 container mx-auto">
-        <Link href="/">
+        <Link href={user ? "/home" : "/"}>
           <Logo
             className="gap-3"
             iconClassName="w-8 h-8 md:w-12 md:h-12 p-1 md:p-1.5"
