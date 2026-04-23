@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
     session: Session | null;
@@ -17,6 +18,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [session, setSession] = useState<Session | null>(null);
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const { toast } = useToast();
 
     useEffect(() => {
         // Check active session
@@ -43,6 +45,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     const signInWithGoogle = async () => {
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('MISSING')) {
+            toast({
+                variant: "destructive",
+                title: "Configuration Missing",
+                description: "Supabase URL is not configured. Please check your .env file and restart the server.",
+            });
+            return;
+        }
+
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
