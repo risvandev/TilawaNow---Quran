@@ -18,7 +18,6 @@ const SurahStoryPage = () => {
 
     // Loading states
     const [loadingSurah, setLoadingSurah] = useState(true);
-    const [generatingStory, setGeneratingStory] = useState(false);
 
     // Persist translation settings
     const [translationId, setTranslationId] = useState<number>(131);
