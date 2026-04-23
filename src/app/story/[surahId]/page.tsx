@@ -22,7 +22,6 @@ const SurahStoryPage = () => {
     // Persist translation settings
     const [translationId, setTranslationId] = useState<number>(131);
     const [script, setScript] = useState<string>("text_uthmani");
-    const [selectedLanguage, setSelectedLanguage] = useState<string>("English");
     const [settingsLoaded, setSettingsLoaded] = useState(false);
 
     // 0. Load settings from localStorage
@@ -30,10 +29,8 @@ const SurahStoryPage = () => {
         if (typeof window !== "undefined") {
             const savedTranslationId = parseInt(localStorage.getItem("quranTranslation") || "131");
             const savedScript = localStorage.getItem("quranScript") || "text_uthmani";
-            const savedLanguage = localStorage.getItem("selectedTranslationName") || "English";
             setTranslationId(savedTranslationId);
             setScript(savedScript);
-            setSelectedLanguage(savedLanguage);
             setSettingsLoaded(true);
         }
     }, []);

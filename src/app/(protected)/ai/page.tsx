@@ -25,8 +25,8 @@ import {
   AIChatMode
 } from "@/lib/ai-service";
 import { useToast } from "@/hooks/use-toast";
-import { useAICompanion } from "@/contexts/AICompanionContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAICompanion } from "@/contexts/AICompanionContext";
 import {
   Tooltip,
   TooltipContent,
