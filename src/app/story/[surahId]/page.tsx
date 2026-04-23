@@ -114,7 +114,7 @@ const SurahStoryPage = () => {
                 </Button>
                 <div className="text-right md:text-center">
                     <h1 className="text-lg md:text-xl font-bold">{surah.name_simple}</h1>
-                    <p className="text-[10px] md:text-xs text-muted-foreground">Story Mode • Verses {startVerseNum}-{endVerseNum}</p>
+                    <p className="text-[10px] md:text-xs text-muted-foreground">Surah Explained • Verses {startVerseNum}-{endVerseNum}</p>
                 </div>
                 <div className="w-8 md:w-24" />
             </div>

@@ -990,8 +990,8 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
             <div className="flex items-center gap-3">
               <Link href={`/story/${surahId}`}>
                 <Button variant="ghost" size="sm" className="h-auto py-1 gap-2 text-[10px] md:text-xs text-amber-500 hover:text-amber-600 hover:bg-amber-500/10 px-2">
-                  <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  <span>Story Mode</span>
+                  <BookOpen className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  <span>Surah Explained</span>
                 </Button>
               </Link>
 
