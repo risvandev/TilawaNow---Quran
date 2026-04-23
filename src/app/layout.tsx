@@ -44,6 +44,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://api.quran.com" />
         <link rel="dns-prefetch" href="https://verses.quran.com" />
         <link rel="dns-prefetch" href="https://api.quran.com" />
+        <link rel="preload" as="image" href="/hero_section.png" />
       </head>
       <body className={inter.className} suppressHydrationWarning>
         <Providers>

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, User } from "lucide-react";
@@ -10,10 +11,14 @@ export const HeroSection = () => {
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
-        <img 
+        <Image 
           src="/hero_section.png" 
           alt="Quran Background" 
-          className="w-full h-full object-cover opacity-60" 
+          fill
+          priority
+          className="object-cover opacity-60" 
+          sizes="100vw"
+          quality={90}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/40 to-background/90" />
       </div>

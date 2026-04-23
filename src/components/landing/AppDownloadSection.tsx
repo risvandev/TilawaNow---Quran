@@ -1,10 +1,28 @@
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 
+import { useState } from "react";
 import { usePWA } from "@/contexts/PWAContext";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog";
+import { Share, PlusSquare, ArrowUpCircle } from "lucide-react";
 
 export const AppDownloadSection = () => {
-    const { install, isInstallable } = usePWA();
+    const { install, isInstallable, isInstalled } = usePWA();
+    const [showInstructions, setShowInstructions] = useState(false);
+
+    const handleInstallClick = () => {
+        if (isInstallable) {
+            install();
+        } else if (!isInstalled) {
+            setShowInstructions(true);
+        }
+    };
 
     return (
         <section className="py-16 md:py-24 bg-card/50 border-t border-border/50">
@@ -39,13 +57,57 @@ export const AppDownloadSection = () => {
                             <Button
                                 size="lg"
                                 className="h-14 px-8 text-lg gap-3 rounded-full shadow-lg hover:shadow-primary/25 transition-all"
-                                onClick={install}
-                                disabled={!isInstallable}
+                                onClick={handleInstallClick}
+                                disabled={isInstalled}
                             >
                                 <Download className="w-6 h-6" />
-                                {isInstallable ? "Download App" : "App Installed"}
+                                {isInstalled ? "App Installed" : "Download App"}
                             </Button>
                         </div>
+
+                        {/* Installation Instructions Dialog */}
+                        <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
+                            <DialogContent className="max-w-md bg-card border-border shadow-2xl">
+                                <DialogHeader>
+                                    <DialogTitle className="text-2xl font-bold">How to Install</DialogTitle>
+                                    <DialogDescription className="text-muted-foreground text-lg mt-2">
+                                        If the download doesn't start automatically, follow these steps to add TilawaNow to your home screen:
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-6 py-4">
+                                    <div className="flex items-start gap-4 p-4 rounded-xl bg-secondary/50 border border-border/50">
+                                        <div className="bg-primary/20 p-2 rounded-lg text-primary">
+                                            <Share className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-foreground">1. Tap Share</p>
+                                            <p className="text-sm text-muted-foreground">Look for the share icon in your browser's menu or toolbar.</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-4 p-4 rounded-xl bg-secondary/50 border border-border/50">
+                                        <div className="bg-primary/20 p-2 rounded-lg text-primary">
+                                            <PlusSquare className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-foreground">2. Add to Home Screen</p>
+                                            <p className="text-sm text-muted-foreground">Scroll down and tap 'Add to Home Screen'.</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-4 p-4 rounded-xl bg-primary/10 border border-primary/20">
+                                        <div className="bg-primary/20 p-2 rounded-lg text-primary">
+                                            <ArrowUpCircle className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-foreground">3. TilawaNow Ready</p>
+                                            <p className="text-sm text-muted-foreground">The app will now be available on your home screen for a premium experience.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <Button onClick={() => setShowInstructions(false)} className="w-full h-12 text-lg">
+                                    Got it
+                                </Button>
+                            </DialogContent>
+                        </Dialog>
 
                         <p className="mt-6 text-sm text-muted-foreground/60">
                             Available for install on iOS and Android via browser
