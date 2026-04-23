@@ -18,7 +18,6 @@ import {
   Copy,
   AlignRight,
   Info,
-  Sparkles,
   RotateCcw,
   Repeat1,
   MoreVertical
