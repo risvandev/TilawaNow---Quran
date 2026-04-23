@@ -9,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Send,
   ArrowRight,
-  BookOpen,
   Info,
   ChevronDown,
   X,
