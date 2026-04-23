@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, createContext, useContext, ReactNode } from "react";
+import { useState, createContext, useContext, ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -15,7 +15,6 @@ import {
   HelpCircle,
   Lock,
   LockOpen,
-  ChevronRight,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { usePrefetch } from "@/hooks/use-prefetch";

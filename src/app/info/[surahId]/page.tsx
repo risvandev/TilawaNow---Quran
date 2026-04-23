@@ -6,7 +6,6 @@ import Link from "next/link";
 import { fetchSurah, fetchSurahInfo, Surah } from "@/lib/quran-api";
 import { chatWithAI } from "@/lib/ai-service";
 import { ChevronLeft, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface StructuredInfo {
     snapshot: string;
@@ -15,7 +14,9 @@ interface StructuredInfo {
 }
 
 const SurahInfoPage = () => {
-    const { surahId } = useParams();
+    const params = useParams();
+    const surahId = params?.surahId as string;
+    
     const [surah, setSurah] = useState<Surah | null>(null);
     const [info, setInfo] = useState<StructuredInfo | null>(null);
     const [loading, setLoading] = useState(true);
@@ -26,7 +27,9 @@ const SurahInfoPage = () => {
             setLoading(true);
 
             try {
-                const id = parseInt(surahId);
+                const idStr = Array.isArray(surahId) ? surahId[0] : surahId;
+                const id = parseInt(idStr);
+                
                 const surahData = await fetchSurah(id);
                 setSurah(surahData);
 

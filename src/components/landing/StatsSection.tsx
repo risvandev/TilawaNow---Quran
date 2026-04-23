@@ -1,4 +1,4 @@
-import { BookOpen, Users, Layers, Infinity } from "lucide-react";
+import { BookOpen, Layers, Infinity } from "lucide-react";
 import { QURAN_STATS } from "@/lib/quran-api";
 import { Counter } from "@/components/ui/counter";
 import BorderGlow from "@/components/ui/BorderGlow";

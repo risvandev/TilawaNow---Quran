@@ -24,6 +24,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
 
   useEffect(() => {
+    // Restore settings
     const savedFont = localStorage.getItem("quranFont");
     if (savedFont) {
       document.documentElement.style.setProperty("--font-quran", savedFont);
@@ -31,6 +32,23 @@ export function Providers({ children }: { children: React.ReactNode }) {
     const savedNightMode = localStorage.getItem("nightMode") === "true";
     if (savedNightMode) {
       document.body.classList.add("night-mode");
+    }
+
+    // Register Service Worker for PWA (production only)
+    if ("serviceWorker" in navigator && process.env.NODE_ENV === "production") {
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then((registration) => {
+          console.log("SW registered: ", registration);
+        })
+        .catch((registrationError) => {
+          console.log("SW registration failed: ", registrationError);
+        });
+    } else if ("serviceWorker" in navigator && process.env.NODE_ENV === "development") {
+      // Unregister any leftover SW from dev testing to prevent issues
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((registration) => registration.unregister());
+      });
     }
   }, []);
 

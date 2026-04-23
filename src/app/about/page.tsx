@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Info, Search, Lightbulb, PenTool, Star, Terminal, Heart, Zap, Shield, Sparkles } from "lucide-react";
+import { ChevronLeft, Info, Heart } from "lucide-react";
 
 /**
  * About TilawaNow - Ultra Minimal Industrial Style

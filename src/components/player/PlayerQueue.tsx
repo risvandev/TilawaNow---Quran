@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { Play, Volume2 } from "lucide-react";
 
 const PlayerQueue: React.FC = () => {
-    const { playlist, currentIndex, jumpToIndex, currentVerseKey, isPlaying } = useAudioPlayer();
+    const { playlist, currentIndex, jumpToIndex, isPlaying } = useAudioPlayer();
     const activeRef = useRef<HTMLButtonElement>(null);
 
     // Auto-scroll to current verse

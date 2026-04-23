@@ -8,10 +8,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, Info, BookOpen, History, Lightbulb } from "lucide-react";
+import { Loader2, Info, History, Lightbulb } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Surah, fetchSurahInfo } from "@/lib/quran-api";
-import { chatWithAI, ChatMessage } from "@/lib/ai-service";
+import { chatWithAI } from "@/lib/ai-service";
 
 interface SurahInfoDialogProps {
     surah: Surah | null;

@@ -11,7 +11,7 @@ import { POPULAR_SURAHS } from "@/lib/quran-api";
  */
 export function GlobalPrefetch() {
   const { prefetchRoute, prefetchSurahData } = usePrefetch();
-  const { data: surahs } = useSurahs(); // This triggers the surah list fetch
+  useSurahs(); // This triggers the surah list fetch
 
   useEffect(() => {
     // 1. Prefetch core routes for instant navigation

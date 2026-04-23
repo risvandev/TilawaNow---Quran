@@ -1,8 +1,43 @@
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
+// --- Rate Limiting (in-memory, per-instance) ---
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW = 15 * 60 * 1000; // 15 minutes
+const RATE_LIMIT_MAX = 3; // max 3 invites per window per IP
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return false;
+  }
+  entry.count++;
+  return entry.count > RATE_LIMIT_MAX;
+}
+
+// --- HTML Sanitization ---
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 export async function POST(req: Request) {
   try {
+    // Rate limit by IP
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    if (isRateLimited(ip)) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const { to_email, from_name, invite_link } = await req.json();
 
     if (!to_email || !from_name) {
@@ -11,6 +46,30 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(to_email)) {
+      return NextResponse.json(
+        { error: "Invalid email address" },
+        { status: 400 }
+      );
+    }
+
+    // Validate invite_link
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "tilawanow.vercel.app";
+    // Ensure the link is internal or to the allowed domain
+    if (invite_link && !invite_link.includes(siteUrl) && !invite_link.startsWith('/')) {
+        return NextResponse.json(
+            { error: "Invalid invite link domain" },
+            { status: 400 }
+        );
+    }
+
+    // Sanitize user inputs
+    const safeFromName = escapeHtml(from_name);
+    // invite_link is sanitized by construction or validation above, but let's be safe if it's used in text
+    const safeInviteLink = invite_link ? escapeHtml(invite_link) : `https://${siteUrl}/signup`;
 
     // SMTP Configuration from environment variables
     const port = Number(process.env.SMTP_PORT) || 587;
@@ -24,9 +83,7 @@ export async function POST(req: Request) {
       },
     });
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "TilawaNow.vercel.app";
-
-    // Email HTML Template (User provided)
+    // Email HTML Template
     const htmlContent = `
 <!DOCTYPE html>
 <html lang="en">
@@ -70,13 +127,13 @@ export async function POST(req: Request) {
               </h2>
 
               <p style="margin:0 0 20px;font-size:16px;color:#111318;line-height:1.6;">
-                <strong>${from_name}</strong> invited you to create a user on <strong>${siteUrl}</strong>.
+                <strong>${safeFromName}</strong> invited you to create a user on <strong>${siteUrl}</strong>.
                 Follow the link below to accept the invitation and start your journey with the Qur’an.
               </p>
 
               <!-- CTA -->
               <div style="text-align:center;margin:35px 0;">
-                <a href="${invite_link}"
+                <a href="${safeInviteLink}"
                    style="display:inline-block;padding:14px 30px;background:#648CB4;color:#ffffff;text-decoration:none;font-size:16px;font-weight:600;border-radius:8px;">
                   Accept the invitation
                 </a>
@@ -112,7 +169,7 @@ export async function POST(req: Request) {
     await transporter.sendMail({
       from: `"TilawaNow" <${process.env.SMTP_USER}>`,
       to: to_email,
-      subject: `${from_name} invited you to TilawaNow`,
+      subject: `${safeFromName} invited you to TilawaNow`,
       html: htmlContent,
     });
 
@@ -120,7 +177,7 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("Email API error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to send email" },
+      { error: "Failed to send email" },
       { status: 500 }
     );
   }

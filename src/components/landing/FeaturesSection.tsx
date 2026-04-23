@@ -5,11 +5,8 @@ import {
   BookMarked,
   Sparkles,
   Clock,
-  ArrowRight,
 } from "lucide-react";
 import BorderGlow from "@/components/ui/BorderGlow";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
 
 const features = [
   {

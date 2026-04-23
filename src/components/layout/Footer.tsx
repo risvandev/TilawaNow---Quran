@@ -1,4 +1,3 @@
-import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { BookOpen, Heart, Instagram, Send } from "lucide-react";
 
@@ -20,9 +19,6 @@ const footerLinks = {
 };
 
 export const Footer = () => {
-  const pathname = usePathname();
-  const isLanding = pathname === "/";
-
   return (
     <footer className="bg-card border-t border-border">
       <div className="container mx-auto px-6 py-12">
@@ -33,7 +29,7 @@ export const Footer = () => {
               <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
                 <BookOpen className="w-6 h-6 text-primary-foreground" />
               </div>
-              <span className="text-xl font-semibold text-foreground">Quran</span>
+              <span className="text-xl font-semibold text-foreground">TilawaNow</span>
             </Link>
             <p className="text-muted-foreground text-sm leading-relaxed mb-4">
               A calm, beautiful space to read, listen, understand, and build a meaningful
@@ -114,7 +110,7 @@ export const Footer = () => {
         {/* Bottom bar */}
         <div className="mt-12 pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
           <p className="text-muted-foreground text-sm">
-            © {new Date().getFullYear()} Quran. Free forever, for everyone.
+            © {new Date().getFullYear()} TilawaNow. Free forever, for everyone.
           </p>
           <p className="text-muted-foreground text-sm flex items-center gap-1 justify-center md:justify-start">
             Made with <Heart className="w-4 h-4 text-destructive fill-destructive" /> for the Ummah

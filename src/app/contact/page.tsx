@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, Send, MessageSquare, CheckCircle, Heart, ChevronLeft, Clock, Sparkles, QrCode } from "lucide-react";
+import { Send, MessageSquare, CheckCircle, Heart, ChevronLeft, Clock, Sparkles, QrCode } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Footer } from "@/components/layout/Footer";
 import {

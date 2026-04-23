@@ -1,17 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { HelpCircle, Search, Bot, User, Send, MessageSquare, Sparkles, ArrowLeft, ArrowRight } from "lucide-react";
+import { HelpCircle, Search, Bot, User, Send, Sparkles, ArrowLeft, ArrowRight } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -21,7 +20,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Footer } from "@/components/layout/Footer";
 
 const faqs = [

@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAudioPlayer } from './AudioPlayerContext';
 import { useAuth } from './AuthContext';
 import { supabase } from '@/lib/supabase';
-import { fetchSurah, fetchVerses, fetchChapterVerseAudios, Surah, Verse } from '@/lib/quran-api';
+import { fetchSurah, fetchVerses, fetchChapterVerseAudios } from '@/lib/quran-api';
 import { useToast } from '@/hooks/use-toast';
 
 interface KhatmahProgress {
@@ -30,7 +30,6 @@ export const KhatmahProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setOnPlaylistEnd,
         currentSurah,
         currentVerseKey,
-        isPlaying
     } = useAudioPlayer();
     const { toast } = useToast();
 
@@ -140,12 +139,9 @@ export const KhatmahProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
         try {
             // Fetch next surah data
-            const [surah, { verses }, audioMap] = await Promise.all([
+            const [surah, , audioMap] = await Promise.all([
                 fetchSurah(nextSurahId),
-                fetchVerses(nextSurahId, 20, 1, 300), // Assuming < 300 verses or need pagination logic? Most surahs fit, but long ones don't.
-                // WE NEED FULL SURAH verses. fetchVerses handles pagination. 
-                // We actually need a robust "Fetch All Verses" helper or use page 1 and assume 'per_page' can be huge. ARgh.
-                // 1-Quran_site API limit is usually 50 per page. 'audioMap' uses 300.
+                fetchVerses(nextSurahId, 20, 1, 300),
                 fetchChapterVerseAudios(nextSurahId)
             ]);
 

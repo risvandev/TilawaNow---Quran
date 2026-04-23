@@ -8,7 +8,10 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   unique_ayahs_read INTEGER DEFAULT 0,
   current_streak INTEGER DEFAULT 0,
   last_active_date TIMESTAMPTZ,
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  last_read_ayah TEXT,
+  frequent_topics JSONB DEFAULT '[]'::jsonb,
+  ai_knowledge_level TEXT DEFAULT 'Beginner'
 );
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
@@ -107,6 +110,8 @@ CREATE TABLE IF NOT EXISTS public.verses_read (
   user_id UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
   verse_key TEXT NOT NULL,
   read_count INTEGER DEFAULT 1,
+  difficulty_score INTEGER DEFAULT 0,
+  struggle_count INTEGER DEFAULT 0,
   UNIQUE(user_id, verse_key)
 );
 
@@ -175,3 +180,21 @@ BEGIN
     CREATE POLICY "Users can manage own reading profile" ON public.user_reading_profile FOR ALL USING (auth.uid() = user_id);
   END IF;
 END $$;
+
+
+-- 10. KHATMAH PROGRESS
+CREATE TABLE IF NOT EXISTS public.khatmah_progress (
+  user_id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
+  surah_id INTEGER NOT NULL,
+  verse_key TEXT NOT NULL,
+  last_read_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.khatmah_progress ENABLE ROW LEVEL SECURITY;
+DO $$ 
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can manage own khatmah progress' AND tablename = 'khatmah_progress') THEN
+    CREATE POLICY "Users can manage own khatmah progress" ON public.khatmah_progress FOR ALL USING (auth.uid() = user_id);
+  END IF;
+END $$;
+

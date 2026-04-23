@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -30,11 +30,10 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings as SettingsIcon, Moon, Sun, Globe, User, Bell, BookOpen, Volume2, Play, Loader2, Square, MessageCircle, Send, ChevronLeft, ChevronRight, Pencil, Check, X, Heart, HelpCircle, Mail, ShieldCheck, Copy, QrCode } from "lucide-react";
+import { Settings as SettingsIcon, Moon, Sun, Globe, User, Bell, BookOpen, Volume2, Play, Loader2, Square, Send, ChevronLeft, ChevronRight, Pencil, Check, X, Heart, HelpCircle, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getTranslationsByLanguage, AVAILABLE_RECITERS } from "@/lib/quran-api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -54,7 +53,6 @@ const Settings = () => {
   const [activeTab, setActiveTab] = useState("general");
   const [showMobileDetail, setShowMobileDetail] = useState(false);
   const [notifications, setNotifications] = useState(true);
-  const [dailyReminder, setDailyReminder] = useState(true);
   const [quranScript, setQuranScript] = useState("text_uthmani");
   const [nightMode, setNightMode] = useState(false);
   const [reciterId, setReciterId] = useState(1);
@@ -83,7 +81,7 @@ const Settings = () => {
 
     const loadProfileSettings = async () => {
       try {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from('profiles')
           .select('theme, translation_id, reciter_id, quran_script, night_mode, notifications_enabled')
           .eq('id', user.id)
@@ -537,7 +535,6 @@ const Settings = () => {
 
                         // Find and save name for AI Story Mode
                         const allTranslations = getTranslationsByLanguage();
-                        let selectedName = "English";
                         for (const langKey in allTranslations) {
                           const found = allTranslations[langKey].find(t => t.id.toString() === value);
                           if (found) {
@@ -555,10 +552,12 @@ const Settings = () => {
                       <SelectTrigger className="bg-secondary border-border">
                         <SelectValue placeholder="Select translation" />
                       </SelectTrigger>
-                      <SelectContent className="max-h-[300px]">
+                      <SelectContent className="max-h-[400px] overflow-y-auto">
                         {Object.entries(getTranslationsByLanguage()).map(([language, translations]) => (
                           <SelectGroup key={language}>
-                            <SelectLabel>{language}</SelectLabel>
+                            <SelectLabel className="text-center py-2.5 px-2 text-primary font-bold border-b border-primary/10 mb-2 sticky top-0 bg-popover z-20">
+                              {language}
+                            </SelectLabel>
                             {translations.map((t) => (
                               <SelectItem key={t.id} value={t.id}>
                                 {t.name}

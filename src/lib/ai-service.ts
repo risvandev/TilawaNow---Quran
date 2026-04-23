@@ -1,5 +1,5 @@
 import getPuter from "./puter-service";
-import { Surah, fetchTafsir, fetchSingleVerse, TAFSIR_RESOURCES } from "./quran-api";
+import { fetchTafsir, fetchSingleVerse, TAFSIR_RESOURCES } from "./quran-api";
 
 // Types
 export interface ChatMessage {

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +12,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 
 const SignUp = () => {
-    const navigate = useRouter();
     const { toast } = useToast();
     const { signInWithGoogle } = useAuth();
     const [isLoading, setIsLoading] = useState(false);

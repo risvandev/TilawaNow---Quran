@@ -1,5 +1,5 @@
 import React from "react";
-import { Check, Eye, Sparkles } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ReadingIndicatorProps {

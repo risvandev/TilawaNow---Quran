@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { 
   fetchSurahs, 
-  fetchSurah, 
   fetchVerses, 
   fetchChapterVerseAudios,
   getPreferredReciterId,

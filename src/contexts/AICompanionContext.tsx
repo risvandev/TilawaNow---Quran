@@ -83,19 +83,28 @@ export const AICompanionProvider = ({ children }: { children: React.ReactNode })
     }
   }, [user, refreshMemory]);
 
+  const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
   const updateCurrentContext = useCallback((surahId: number, ayahNumber: number, verseKey: string) => {
     setCurrentContext({ surahId, ayahNumber, verseKey });
     
     // Periodically update the last_read_ayah in DB for persistence
     // We debounce this to avoid spamming the DB
-    const timeoutId = setTimeout(async () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+    timeoutRef.current = setTimeout(async () => {
       if (user) {
         await supabase.from("profiles").update({ last_read_ayah: verseKey }).eq("id", user.id);
       }
+      timeoutRef.current = null;
     }, 5000);
-
-    return () => clearTimeout(timeoutId);
   }, [user]);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   return (
     <AICompanionContext.Provider

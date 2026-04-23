@@ -8,7 +8,6 @@ import {
   Target,
   Flame,
   Calendar,
-  ChevronRight,
   Award,
   Clock,
   Settings,

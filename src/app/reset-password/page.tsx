@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronLeft, Loader2, Lock, KeyRound, Eye, EyeOff } from "lucide-react";
+import { Loader2, Lock, KeyRound, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 
@@ -20,11 +19,13 @@ const ResetPassword = () => {
 
     // Optional: Check if we have a session (hash fragment from email link)
     useEffect(() => {
-        supabase.auth.onAuthStateChange(async (event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, _session) => {
             if (event === "PASSWORD_RECOVERY") {
                 // Determine if we need to do anything specific
             }
         });
+
+        return () => subscription.unsubscribe();
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -57,7 +58,7 @@ const ResetPassword = () => {
                     title: "Password updated",
                     description: "You can now sign in with your new password.",
                 });
-                navigate("/home");
+                navigate.push("/home");
             }
         } catch (error) {
             toast({
@@ -78,7 +79,6 @@ const ResetPassword = () => {
             <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-accent/5 rounded-full blur-[120px]" />
 
             <div className="w-full max-w-md relative z-10 animate-fade-in-up">
-
                 <div className="glass-card p-8 md:p-10 border border-white/5 shadow-2xl">
                     <div className="text-center mb-8">
                         <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">

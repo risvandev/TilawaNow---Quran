@@ -11,12 +11,12 @@ export const HeroSection = () => {
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
-        <Image 
-          src="/hero_section.png" 
-          alt="Quran Background" 
+        <Image
+          src="/hero_section.webp"
+          alt="Quran Background"
           fill
           priority
-          className="object-cover opacity-60" 
+          className="object-cover opacity-60"
           sizes="100vw"
           quality={90}
         />

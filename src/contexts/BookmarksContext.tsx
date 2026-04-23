@@ -91,6 +91,7 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
             const { data: bookmarksData, error: bookmarksError } = await supabase
                 .from('bookmarks')
                 .select('*')
+                .eq('user_id', user!.id)
                 .order('created_at', { ascending: false });
 
             if (bookmarksError) throw bookmarksError;
@@ -100,6 +101,7 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
             const { data: historyData, error: historyError } = await supabase
                 .from('reading_history')
                 .select('surah_id, verse_key, last_read_at')
+                .eq('user_id', user!.id)
                 .order('last_read_at', { ascending: false });
 
             if (historyError) throw historyError;
@@ -127,9 +129,10 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
             }
 
             // Fetch Daily Activity (Last 7 Days) for Chart
-            const { data: activityData, error: activityError } = await supabase
+            const { data: activityData } = await supabase
                 .from('daily_activity')
                 .select('date, ayahs_count')
+                .eq('user_id', user!.id)
                 .gte('date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()) // Last 7 days
                 .order('date', { ascending: true });
 
@@ -151,6 +154,7 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
             const { data: marksData, error: marksError } = await supabase
                 .from('marks')
                 .select('*')
+                .eq('user_id', user!.id)
                 .order('created_at', { ascending: false });
 
             if (marksError) throw marksError;
@@ -203,7 +207,6 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
         if (!user) return;
 
         setBookmarks(prev => {
-            const previousBookmarks = [...prev];
             // We need to store previous state outside or trust the revert logic differently,
             // but here we just need stable function identity.
             return prev.filter(b => b.verse_key !== verseKey);
@@ -230,73 +233,7 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
         return bookmarks.some(b => b.verse_key === verseKey);
     }, [bookmarks]);
 
-    const updateReadingHistory = useCallback(async (surahId: number, verseKey: string) => {
-        if (!user) return;
 
-        try {
-            // 1. Update Detailed History
-            const { error: historyError } = await supabase.from('reading_history').upsert(
-                { user_id: user.id, surah_id: surahId, verse_key: verseKey, last_read_at: new Date().toISOString() },
-                { onConflict: 'user_id, surah_id' }
-            );
-
-            if (historyError) throw historyError;
-
-            // Update local history state
-            setReadingHistory(prev => {
-                const filtered = prev.filter(h => h.surah_id !== surahId);
-                return [{ surah_id: surahId, verse_key: verseKey, last_read_at: new Date().toISOString() }, ...filtered];
-            });
-
-            // 2. Log Daily Activity
-            const today = new Date().toISOString().split('T')[0];
-
-            // We need functional update to access latest state without dependency
-            // But for async logic relying on 'dailyActivity' state, we need it in dependency or use functional state setters everywhere
-            // To keep useCallback stable, we shouldn't depend on changing state like 'dailyActivity' directly if we can avoid it.
-            // However, we need to know existing count. 
-            // Better strategy: fetch reliable count or trust local optimistic. 
-
-            // Re-implementing lightly to be safe with dependencies:
-            // We will do optimistic update inside setDailyActivity to avoid dependency on 'dailyActivity'
-
-            let newCount = 1;
-            setDailyActivity(prev => {
-                const existingToday = prev.find(d => d.date === today);
-                newCount = (existingToday?.count || 0) + 1;
-                const others = prev.filter(d => d.date !== today);
-                return [...others, { date: today, count: newCount }].sort((a, b) => a.date.localeCompare(b.date));
-            });
-
-            // DB Upsert for Activity
-            // We use the newCount derived above, but strictly this is inside a callback. 
-            // Since we can't easily extract the return value from setDailyActivity updater, we might drift.
-            // BUT for the sake of stabilization:
-
-            // For now, let's depend on user and rely on the fact that other state changes (bookmarks) won't break this.
-            // Actually, we must include userStats in dependency if we use it.
-            // Creating a robust stable function often requires refs for mutable state or reducers.
-            // As a quick fix for the "unwanted loading", just wrapping in useCallback with state dependencies is enough 
-            // as long as the state doesn't change *during* the initial render loop of the consumer.
-
-            // However, 'userStats' changes on every read. So this function will still change on every read.
-            // PROPER FIX:  The generic 'ReadingHistory' update shouldn't continuously destabilize the 'Context Value' 
-            // if we can help it, OR the consumer (ReadQuran) shouldn't depend on it for 'useEffect' refetching.
-
-            // But ReadQuran *does* depend on it.
-            // If we use refs for state, we can keep the function stable!
-
-        } catch (error) {
-            console.error('Error updating history/stats:', error);
-        }
-
-        // Parallel: Update DB
-        // We need to fetch current count to be accurate or valid logic... 
-        // For this specific 'unwanted loading' bug, the issue is that 'ReadQuran' calls 'logVerseReading' which calls this.
-        // If this changes identity, 'ReadQuran' re-runs effect.
-
-        // Let's use the REF pattern for the state variables inside this callback to ensure it has STABLE identity.
-    }, [user]); // We will fix the implementation below to use Refs/functional updates
 
     // To properly fix, we need to implement the function using functional updates only or Refs.
     // Let's try to just Memoize the value, but if updateReadingHistory changes, value changes.

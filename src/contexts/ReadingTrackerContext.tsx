@@ -83,7 +83,7 @@ export const ReadingTrackerProvider: React.FC<{ children: React.ReactNode }> = (
     const sId = overrideSessionId || sessionIdRef.current;
     if (!user || !sId || signalsBuffer.current.size === 0 || isRDSSuspendedRef.current) return;
 
-    const dataToFlush = Array.from(signalsBuffer.current.entries()).map(([key, signals]) => ({
+    const dataToFlush = Array.from(signalsBuffer.current.entries()).map(([, signals]) => ({
       user_id: user.id,
       session_id: sId,
       surah_id: signals.surahId,

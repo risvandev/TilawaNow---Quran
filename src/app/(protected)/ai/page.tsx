@@ -7,15 +7,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Sparkles,
   Send,
-  Compass,
   ArrowRight,
-  Zap,
   BookOpen,
-  GraduationCap,
   Info,
-  History,
   ChevronDown,
   X,
   Quote,
@@ -129,13 +124,28 @@ const AIAssistance = () => {
   const [selectionPopup, setSelectionPopup] = useState<{ text: string, x: number, y: number } | null>(null);
 
   // Puter State
-  const [isPuterReady, setIsPuterReady] = useState(false);
   const [isPuterSignedIn, setIsPuterSignedIn] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(true);
 
   useEffect(() => {
     setMounted(true);
+    // Load chat history from session storage on mount
+    const savedChat = sessionStorage.getItem("tilawanow_chat_history");
+    if (savedChat) {
+      try {
+        setMessages(JSON.parse(savedChat));
+      } catch (e) {
+        console.error("Failed to load chat history:", e);
+      }
+    }
   }, []);
+
+  // Persist messages to session storage whenever they change
+  useEffect(() => {
+    if (mounted && messages.length > 0) {
+      sessionStorage.setItem("tilawanow_chat_history", JSON.stringify(messages));
+    }
+  }, [messages, mounted]);
 
   // Initialize Puter from SDK
   useEffect(() => {
@@ -143,7 +153,6 @@ const AIAssistance = () => {
       const checkPuter = () => {
         const p = getPuter();
         if (p) {
-          setIsPuterReady(true);
           const signedIn = p.auth.isSignedIn();
           setIsPuterSignedIn(signedIn);
           setShowOnboarding(!signedIn);
@@ -168,7 +177,8 @@ const AIAssistance = () => {
   }, [messages]);
 
   useEffect(() => {
-    if (isPuterSignedIn && (messages?.length || 0) === 0 && !isLoading) {
+    // Only show welcome message if there are no existing messages
+    if (isPuterSignedIn && mounted && messages.length === 0 && !isLoading) {
       const welcomeText = userAIMemory?.knowledgeLevel === "Beginner"
         ? "Assalamu Alaikum! I'm your Quran companion. Ready to explore Al-Fatiha?"
         : `Assalamu Alaikum! Welcome back ${user?.email?.split('@')[0] || ''}. How's your focus today?`;
@@ -176,7 +186,7 @@ const AIAssistance = () => {
       setMessages([{ role: "assistant", content: welcomeText }]);
       handleGenerateSuggestions();
     }
-  }, [isPuterSignedIn, userAIMemory?.knowledgeLevel, user?.email]);
+  }, [isPuterSignedIn, userAIMemory?.knowledgeLevel, user?.email, mounted, isLoading, messages.length]);
 
   useEffect(() => {
     if (mounted) {
@@ -442,37 +452,7 @@ const AIAssistance = () => {
 
               {/* Active Context & Action Buttons */}
               <div className="space-y-4">
-                {currentContext.verseKey && (
-                  <div className="glass-card border border-primary/20 rounded-2xl p-4 flex items-center justify-between animate-in zoom-in-95 duration-500">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <BookOpen className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] uppercase font-bold text-primary/60 tracking-wider">Active Context</p>
-                        <p className="text-sm font-bold text-foreground">Verse {currentContext.verseKey}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="hero"
-                        size="sm"
-                        className="rounded-lg h-9 px-4 text-[11px] font-bold"
-                        onClick={() => handleSend(`Explain verse ${currentContext.verseKey} in detail.`)}
-                      >
-                        Explain Ayah
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        className="rounded-lg h-9 px-4 text-[11px] font-bold"
-                        onClick={() => handleSend(`What are the key practical lessons from verse ${currentContext.verseKey}?`)}
-                      >
-                        Lessons
-                      </Button>
-                    </div>
-                  </div>
-                )}
+
 
                 {/* Suggestions / Quick Topics */}
                 {suggestions.length > 0 && (
@@ -512,12 +492,15 @@ const AIAssistance = () => {
                   if (message.role === "assistant" && !message.content) return null;
 
                   return (
-                    <div key={index} id={`message-${index}`} className={`flex gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                    <div key={index} id={`message-${index}`} className={cn(
+                      "flex animate-in fade-in slide-in-from-bottom-4 duration-500",
+                      message.role === "user" ? "justify-end gap-4" : "justify-start gap-0"
+                    )}>
                       <div className={cn(
-                        "max-w-[90%] md:max-w-[80%] rounded-2xl px-6 py-4",
+                        "rounded-2xl py-4",
                         message.role === "user"
-                          ? "bg-primary text-primary-foreground rounded-tr-none shadow-xl shadow-primary/10"
-                          : "bg-transparent border-none shadow-none"
+                          ? "max-w-[90%] md:max-w-[80%] px-6 bg-primary text-primary-foreground rounded-tr-none shadow-xl shadow-primary/10"
+                          : "w-full md:max-w-[80%] px-0 md:px-6 bg-transparent border-none shadow-none"
                       )}>
                         <div className="text-sm md:text-base leading-relaxed selection:bg-primary/30">
                           {message.role === "assistant" ? (
@@ -593,26 +576,26 @@ const AIAssistance = () => {
                 )}
 
                 {/* Input Bar */}
-                <div className="relative group">
-                  <div className="relative">
-                    <Textarea
-                      placeholder={currentContext.verseKey ? `Ask about Verse ${currentContext.verseKey}...` : "Ask about the Quran..."}
-                      value={input}
-                      rows={1}
-                      disabled={isLoading}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                      className="min-h-[64px] max-h-[180px] bg-secondary/95 backdrop-blur-2xl border-border/40 resize-none py-5 pl-6 pr-36 rounded-[1.5rem] focus-visible:ring-1 shadow-2xl text-base text-foreground font-medium placeholder:text-muted-foreground/40 disabled:opacity-50 transition-all focus:border-primary/30"
-                    />
+                <div className="relative glass-card rounded-[1.25rem] md:rounded-[1.5rem] border border-border/40 p-2 md:p-0 shadow-2xl bg-secondary/95 backdrop-blur-2xl transition-all focus-within:border-primary/30">
+                  <Textarea
+                    placeholder={currentContext.verseKey ? `Ask about Verse ${currentContext.verseKey}...` : "Ask about the Quran..."}
+                    value={input}
+                    rows={1}
+                    disabled={isLoading}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                    className="min-h-[48px] md:min-h-[64px] max-h-[180px] w-full bg-transparent border-none resize-none py-3 md:py-5 pl-4 md:pl-6 pr-4 md:pr-36 focus-visible:ring-0 text-base text-foreground font-medium placeholder:text-muted-foreground/40 disabled:opacity-50"
+                  />
 
-                    <div className="absolute right-3 bottom-3 flex items-center gap-2">
+                  <div className="flex items-center justify-between md:absolute md:right-3 md:bottom-3 px-2 pb-1 md:p-0">
+                    <div className="flex items-center gap-1">
                       {/* Mode Selector Dropdown */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-11 px-2 flex items-center gap-2 rounded-xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all"
+                            className="h-9 md:h-11 px-3 md:px-2 flex items-center gap-2 rounded-xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-all md:bg-transparent"
                           >
                             <span className="text-[11px] font-bold uppercase tracking-tight">{chatMode}</span>
                             <ChevronDown className="w-3.5 h-3.5" />
@@ -651,17 +634,17 @@ const AIAssistance = () => {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleSend()}
-                        disabled={!input.trim() || isLoading}
-                        className="h-11 w-11 rounded-2xl hover:bg-primary/10 transition-all hover:scale-105 active:scale-95"
-                      >
-                        <Send className="w-5 h-5 text-primary" />
-                      </Button>
                     </div>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleSend()}
+                      disabled={!input.trim() || isLoading}
+                      className="h-9 w-9 md:h-11 md:w-11 rounded-xl md:rounded-2xl hover:bg-primary/10 hover:text-primary transition-all"
+                    >
+                      <Send className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                    </Button>
                   </div>
                 </div>
               </div>

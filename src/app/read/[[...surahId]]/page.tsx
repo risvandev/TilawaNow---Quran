@@ -16,16 +16,11 @@ import {
   Volume2,
   Loader2,
   Copy,
-  LayoutGrid,
   AlignRight,
   Info,
   Sparkles,
-  MessageCircle,
-  PlayCircle,
-  Target,
   RotateCcw,
   Repeat1,
-  Activity,
   MoreVertical
 } from "lucide-react";
 import {
@@ -35,17 +30,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  fetchSurahs,
-  fetchVerses,
-  fetchChapterAudio,
-  fetchChapterVerseAudios,
-  Surah,
-  Verse,
   Word,
+  Verse,
   QURAN_STATS,
-  TRANSLATIONS,
   getTranslationsByLanguage,
-  getPreferredReciterId,
 } from "@/lib/quran-api";
 import { 
   useSurahs,
@@ -56,15 +44,6 @@ import {
   useUserReadingProfile 
 } from "@/hooks/use-quran-queries";
 import { useIsMobile } from "@/hooks/use-mobile";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Tooltip,
   TooltipContent,
@@ -82,8 +61,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/components/layout/AppSidebar";
-import { useBookmarks } from "@/contexts/BookmarksContext";
 import { useKhatmah } from "@/contexts/KhatmahContext";
+import { useBookmarks } from "@/contexts/BookmarksContext";
 import { useReadingTracker } from "@/contexts/ReadingTrackerContext";
 import { useAICompanion } from "@/contexts/AICompanionContext";
 import { supabase } from "@/lib/supabase";
@@ -109,7 +88,6 @@ const playWordAudio = (audioUrl: string | null) => {
 };
 
 // Word component with hover tooltip for meaning
-// Word component with hover tooltip for meaning - Memoized for performance
 const WordWithMeaning = React.memo(({
   word,
   verseNumber,
@@ -193,7 +171,6 @@ const WordWithMeaning = React.memo(({
 });
 
 // Verse Audio Player
-// Verse Audio Player - Memoized
 const VerseAudioButton = React.memo(({
   audioUrl,
   isPlaying,
@@ -231,13 +208,11 @@ const VerseAudioButton = React.memo(({
   );
 });
 
-// --- Optimized Verse Container to Scope Audio Updates ---
+// Verse Row Component
 const VerseRow = React.memo(({
   verse,
   surahId,
-  verses,
   verseAudios,
-  translationId,
   quranScript,
   isReadMode,
   status,
@@ -257,9 +232,7 @@ const VerseRow = React.memo(({
 }: {
   verse: Verse,
   surahId: number,
-  verses: Verse[],
   verseAudios: Map<string, any>,
-  translationId: string,
   quranScript: string,
   isReadMode: boolean,
   status: "seen" | "read" | "engaged" | null,
@@ -323,7 +296,6 @@ const VerseRow = React.memo(({
             />{" "}
           </React.Fragment>
         ))}
-        {/* End of Ayah Symbol */}
         <span 
           className="relative inline-flex items-center justify-center mx-1.5 md:mx-3 align-middle select-none cursor-pointer group/symbol hover:scale-110 transition-transform duration-200" 
           onClick={(e) => { e.stopPropagation(); handleLocalPlayFromVerse(verse.verse_key); }}
@@ -341,7 +313,6 @@ const VerseRow = React.memo(({
     <div key={verse.id} id={`verse-${surahId}:${verse.verse_number}`} data-ayah-id={verse.verse_number} className={cn("glass-card p-4 md:p-5 opacity-0 animate-fade-in group transition-all duration-500 virtual-row", isCurrentVerse && "border-primary/50 bg-primary/5 shadow-[0_0_20px_rgba(var(--primary),0.1)] ring-1 ring-primary/20 scale-[1.01]")} style={{ animationFillMode: "forwards" }}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-1 md:gap-2">
-          {/* Desktop Direct Buttons */}
           <div className="hidden md:flex items-center gap-2">
             <button
               onClick={() => onToggleMark(surahId, verse.verse_number, 'ayah')}
@@ -370,7 +341,6 @@ const VerseRow = React.memo(({
             <Button variant="ghost" size="iconSm" onClick={() => handleCopyVerse(verse)} className="text-muted-foreground hover:text-primary hover:bg-primary/10" title="Copy Ayah"><Copy className="w-4 h-4" /></Button>
           </div>
 
-          {/* Mobile More Options Menu */}
           <div className="flex md:hidden items-center gap-1">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -437,14 +407,12 @@ const VerseRow = React.memo(({
     prev.loopMode === next.loopMode &&
     prev.isReadMode === next.isReadMode &&
     prev.status === next.status &&
-    prev.quranScript === next.quranScript &&
-    prev.translationId === next.translationId
+    prev.quranScript === next.quranScript
   );
 });
 
-// Surah List View
+// Surah List Component
 const SurahList = () => {
-  const { toast } = useToast();
   const { prefetchSurahData } = usePrefetch();
   const { data: surahs = [], isLoading: isSurahsLoading } = useSurahs();
   const { toggleMark, isMarked } = useBookmarks();
@@ -453,8 +421,6 @@ const SurahList = () => {
   const router = useRouter();
   const { isExpanded, isHovered } = useSidebar();
   const isSidebarOpen = isExpanded || isHovered;
-
-  const loading = isSurahsLoading;
 
   const fuse = new Fuse(surahs, {
     keys: ["name_simple", "name_arabic", "translated_name.name", "id", "revelation_place"],
@@ -466,7 +432,7 @@ const SurahList = () => {
     ? surahs 
     : fuse.search(searchQuery).map(result => result.item);
 
-  if (loading) {
+  if (isSurahsLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -576,7 +542,6 @@ const SurahList = () => {
                 {marked ? 'Marked' : 'Mark'}
               </button>
 
-              {/* Mobile Number Indicator - Clickable to Mark */}
               <div 
                 onClick={(e) => {
                   e.preventDefault();
@@ -593,9 +558,7 @@ const SurahList = () => {
                 {surah.id}
               </div>
 
-              {/* Desktop Visual Container */}
               <div className="hidden md:flex aspect-video md:aspect-[3/2] w-full bg-gradient-to-b from-primary/5 to-transparent items-center justify-center p-4 relative group-hover:from-primary/10 transition-colors duration-300">
-                {/* Desktop Number Indicator - Clickable to Mark */}
                 <div 
                   onClick={(e) => {
                     e.preventDefault();
@@ -617,7 +580,6 @@ const SurahList = () => {
                 </p>
               </div>
 
-              {/* Content Area */}
               <div className="flex-1 min-w-0 flex flex-row md:flex-col items-center md:items-stretch justify-between md:p-4 md:bg-card md:border-t md:border-border/50">
                 <div className="min-w-0 pr-2">
                   <h3 className="font-bold text-base md:text-lg text-foreground group-hover:text-primary transition-colors truncate">
@@ -628,7 +590,6 @@ const SurahList = () => {
                   </p>
                 </div>
 
-                {/* Mobile Right Details */}
                 <div className="flex flex-col items-end shrink-0 md:hidden">
                   <span className="font-arabic text-2xl text-foreground/90 group-hover:text-primary transition-colors mb-0.5">
                     {surah.name_arabic}
@@ -638,7 +599,6 @@ const SurahList = () => {
                   </span>
                 </div>
 
-                {/* Desktop Only Details */}
                 <div className="hidden md:flex items-center justify-between mt-1">
                   <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
                     {surah.verses_count} Ayahs
@@ -658,21 +618,19 @@ const SurahList = () => {
   );
 };
 
-// Surah Reader View with enhanced features
+// Surah Reader Component
 const SurahReader = ({ surahId }: { surahId: number }) => {
   const { toast } = useToast();
   const { prefetchSurahData } = usePrefetch();
-  const [translationId, setTranslationId] = useState(() => {
-    return localStorage.getItem("quranTranslation") || "20";
+  const [translationId] = useState(() => {
+    return typeof window !== 'undefined' ? localStorage.getItem("quranTranslation") || "20" : "20";
   });
   const [isReadMode, setIsReadMode] = useState(false);
-  const [quranScript, setQuranScript] = useState(() => {
-    return localStorage.getItem("quranScript") || "text_uthmani";
+  const [quranScript] = useState(() => {
+    return typeof window !== 'undefined' ? localStorage.getItem("quranScript") || "text_uthmani" : "text_uthmani";
   });
 
   const { user } = useAuth();
- 
-  // New cached queries (Parallel fetching)
   const surah = useSurahMetadata(surahId);
   const { data: userReadingProfile } = useUserReadingProfile(user?.id);
   const { data: priorityAudios } = usePriorityAudios(surahId);
@@ -682,7 +640,6 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
 
   const loading = isVersesLoading || isAudiosLoading;
 
-  // Optimized State: Combined audio data that prioritizes the "Fast" early fetch
   const combinedAudios = useMemo(() => {
     const map = new Map(verseAudios);
     if (priorityAudios) {
@@ -703,16 +660,13 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
     isLoading,
     loopMode,
     setLoopMode,
-    playbackRate,
-    setPlaybackRate
   } = useAudioPlayer();
   const isMobile = useIsMobile();
 
-  const { isKhatmahActive, currentProgress, startKhatmah, stopKhatmah, restartKhatmah } = useKhatmah();
-  const navigate = useRouter();
+
   const { updateReadingHistory, isMarked, toggleMark } = useBookmarks();
   const { updateCurrentContext } = useAICompanion();
-  const { startSession, endSession, logSignal, ayahStates } = useReadingTracker();
+  const { startSession, logSignal, ayahStates } = useReadingTracker();
   const lastLoggedVerseRef = useRef<string | null>(null);
   const visibleAyahsRef = useRef<Set<number>>(new Set());
   const virtuosoRef = useRef<any>(null);
@@ -728,34 +682,26 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
     }
   }, [updateReadingHistory, updateCurrentContext]);
 
-  // Proactive Audio Preheating: Load the first and second verse's audio as soon as ANY audio data is ready
   useEffect(() => {
-    // We use priorityAudios for speed, but fallback to verseAudios if it's already cached
     const currentAudioMap = (priorityAudios?.size ? priorityAudios : verseAudios) as Map<string, any>;
     
     if (!isVersesLoading && verses.length > 0 && currentAudioMap?.size > 0 && !isPlaying && activeSurah?.id !== surahId) {
-      // Preheat 1st Verse into ACTIVE buffer (Ready to fire immediately)
       const firstVerse = verses[0];
       const info1 = currentAudioMap.get(firstVerse.verse_key);
       if (info1) {
         preheatAudio({ ...firstVerse, audio: { url: info1.url, segments: info1.segments } }, 'ACTIVE');
       }
 
-      // Preheat 2nd Verse into INACTIVE buffer (Ready for instant swap)
       if (verses.length > 1) {
         const secondVerse = verses[1];
         const info2 = currentAudioMap.get(secondVerse.verse_key);
         if (info2) {
-          // No delay needed for second buffer as it's a separate hardware object
           preheatAudio({ ...secondVerse, audio: { url: info2.url, segments: info2.segments } }, 'INACTIVE');
         }
       }
-
-      console.log(`[AudioEngine] Dual-Buffer Warming Complete for Surah ${surahId}`);
     }
   }, [isVersesLoading, verses, priorityAudios, verseAudios, preheatAudio, isPlaying, activeSurah, surahId]);
 
-  // Proactive preheating for "Continue Audio" (Resume) feature
   useEffect(() => {
     const currentAudioMap = (priorityAudios?.size ? priorityAudios : verseAudios) as Map<string, any>;
 
@@ -766,10 +712,8 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
         const info = currentAudioMap.get(lastVerse.verse_key);
         if (info) {
           const verseWithAudio = { ...lastVerse, audio: { url: info.url, segments: info.segments } };
-          // Target ACTIVE for the resume point so "CONTINUE" is instant
           preheatAudio(verseWithAudio, 'ACTIVE');
           
-          // Also preheat the NEXT one in INACTIVE if possible
           const nextIdx = verses.findIndex(v => v.verse_number === lastVerseNumber) + 1;
           if (nextIdx < verses.length) {
             const nextVerse = verses[nextIdx];
@@ -783,7 +727,6 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
     }
   }, [isVersesLoading, verses, userReadingProfile, surahId, preheatAudio, priorityAudios, verseAudios, isPlaying]);
 
-  // --- Memoized Handlers for VerseRow Stability ---
   const handleToggleMark = useCallback((s: number, v: number, t: 'ayah' | 'surah') => {
     toggleMark(s, v, t);
   }, [toggleMark]);
@@ -864,7 +807,6 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
   const translationsByLanguage = getTranslationsByLanguage();
-
   const sessionStartedRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -873,42 +815,19 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
       startSession(surahId);
       sessionStartedRef.current = surahId;
 
-      // Speculative prefetch of next surah
       if (surahId < 114) {
         prefetchSurahData(surahId + 1, parseInt(translationId), quranScript);
       }
     }
-    return () => {
-      // We don't call endSession here because it's handled by startSession(next) 
-      // or by the ReadingTrackerContext's beforeunload. 
-      // Calling it here during "Loading" toggles was causing the spam.
-    };
   }, [surahId, loading, surah, logVerseReading, startSession, prefetchSurahData, translationId, quranScript]);
   
-  // Proactive Audio Preheating: Load the first verse's audio as soon as metadata is ready
-  useEffect(() => {
-    if (!loading && verses.length > 0 && verseAudios.size > 0) {
-      const firstVerse = verses[0];
-      const audioInfo = verseAudios.get(firstVerse.verse_key);
-      if (audioInfo) {
-        preheatAudio({ ...firstVerse, audio: { url: audioInfo.url, segments: audioInfo.segments } });
-      }
-    }
-  }, [loading, verses, verseAudios, preheatAudio]);
-
-  // Word-level smooth auto-scroll for mobile - "Smooth Drift" Logic
   useEffect(() => {
     if (isMobile && isPlaying && currentWordPosition !== undefined) {
-      // Use requestAnimationFrame to ensure the DOM has updated
       requestAnimationFrame(() => {
         const activeWord = document.getElementById("active-word");
         if (activeWord) {
           const rect = activeWord.getBoundingClientRect();
           const viewportHeight = window.innerHeight;
-          
-          // "Smooth Drift" Logic:
-          // Trigger a gentle nudge if the word starts sinking below the middle (60% depth)
-          // Target putting the word at a comfortable "Upper Center" position (35% depth)
           const driftTrigger = viewportHeight * 0.6;
           const driftTarget = viewportHeight * 0.35;
 
@@ -923,13 +842,11 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
     }
   }, [currentWordPosition, currentVerseKey, isPlaying, isMobile]);
 
-  // Ayah-level auto-scroll (Primary for jump-to and desktop)
   useEffect(() => {
     if (!loading && currentVerseKey && currentVerseKey.startsWith(`${surahId}:`)) {
       const verseIndex = verses.findIndex(v => v.verse_key === currentVerseKey);
       
       if (verseIndex >= 0) {
-        // 1. Try Virtuoso Scroll First (More reliable for large lists)
         if (virtuosoRef.current) {
           virtuosoRef.current.scrollToIndex({
             index: verseIndex,
@@ -937,7 +854,6 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
             behavior: 'smooth'
           });
         } else {
-          // 2. Fallback to DOM if Virtuoso Ref not ready
           const element = document.getElementById(`verse-${currentVerseKey}`);
           if (element) {
             element.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -946,26 +862,12 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
       }
 
       logVerseReading(surahId, currentVerseKey);
-      // High confidence signal: Audio playback
       const ayahId = parseInt(currentVerseKey.split(":")[1]);
       if (!isNaN(ayahId)) {
         logSignal(surahId, ayahId, "interaction");
       }
     }
   }, [currentVerseKey, surahId, logVerseReading, loading, logSignal, verses]);
-
-  const getVersesWithAudio = () => {
-    return verses.map(v => {
-      const audioInfo = verseAudios.get(v.verse_key);
-      return {
-        ...v,
-        audio: {
-          url: audioInfo?.url || v.audio?.url || "",
-          segments: audioInfo?.segments
-        }
-      };
-    });
-  };
 
   const confirmPlaybackSwitch = () => {
     if (pendingAction) pendingAction();
@@ -978,26 +880,9 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
     setPendingAction(null);
   };
 
-  const handleToggleFullPlay = () => {
-    if (isPlaying && currentVerseKey?.startsWith(`${surahId}:`)) {
-      togglePlay();
-      return;
-    }
-    if (surah) {
-      const playlist = getVersesWithAudio();
-      if (isPlaying && !currentVerseKey?.startsWith(`${surahId}:`)) {
-        setPendingAction(() => () => playSurah(surah, playlist));
-        setShowConfirmDialog(true);
-      } else {
-        playSurah(surah, playlist);
-      }
-    }
-  };
-
   const { isExpanded, isHovered } = useSidebar();
   const isSidebarOpen = isExpanded || isHovered;
 
-  // --- RDS: Visibility Tracking via Virtuoso ---
   const handleItemsRendered = useCallback((items: any[]) => {
     visibleAyahsRef.current.clear();
     items.forEach(item => {
@@ -1010,7 +895,6 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
   useEffect(() => {
     if (loading) return;
 
-    // Heartbeat for visibility signals (every 1.5s - throttled for performance)
     const heartbeat = setInterval(() => {
       visibleAyahsRef.current.forEach((ayahId) => {
         logSignal(surahId, ayahId, "visibility");
@@ -1020,17 +904,15 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
     return () => clearInterval(heartbeat);
   }, [surahId, loading, logSignal]);
 
-  // Global Scroll Pause Detector (Industry Level)
   useEffect(() => {
     let scrollTimer: NodeJS.Timeout;
     const handleScroll = () => {
       clearTimeout(scrollTimer);
       scrollTimer = setTimeout(() => {
-        // Scroll paused - signal all visible ayahs
         visibleAyahsRef.current.forEach((ayahId) => {
           logSignal(surahId, ayahId, "scroll");
         });
-      }, 1000); // 1s pause
+      }, 1000);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -1146,7 +1028,7 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
 
       {isReadMode ? (
         <div className="space-y-8 optimize-gpu">
-          {Object.entries(verses.reduce((acc, v) => { const p = v.page_number; if (!acc[p]) acc[p] = []; acc[p].push(v); return acc; }, {} as Record<number, typeof verses>)).map(([pageNumber, pageVerses]) => (
+          {Object.entries(verses.reduce((acc: Record<number, Verse[]>, v) => { const p = v.page_number; if (!acc[p]) acc[p] = []; acc[p].push(v); return acc; }, {})).map(([pageNumber, pageVerses]) => (
             <div key={pageNumber} className="max-w-4xl mx-auto py-12 mushaf-layout text-foreground relative" dir="rtl">
               <div className="mb-4">
                 {pageVerses.map((verse) => (
@@ -1154,9 +1036,7 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
                     key={verse.id}
                     verse={verse}
                     surahId={surahId}
-                    verses={verses}
                     verseAudios={combinedAudios}
-                    translationId={translationId}
                     quranScript={quranScript}
                     isReadMode={true}
                     status={ayahStates[`${surahId}:${verse.verse_number}`] || historicalStates[`${surahId}:${verse.verse_number}`]}
@@ -1192,14 +1072,12 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
             })()}
             increaseViewportBy={1000}
             itemsRendered={handleItemsRendered}
-            itemContent={(index, verse) => (
+            itemContent={(_index, verse) => (
               <div className="pb-4 px-1">
                 <VerseRow
                   verse={verse}
                   surahId={surahId}
-                  verses={verses}
                   verseAudios={verseAudios}
-                  translationId={translationId}
                   quranScript={quranScript}
                   isReadMode={false}
                   status={ayahStates[`${surahId}:${verse.verse_number}`] || historicalStates[`${surahId}:${verse.verse_number}`]}
@@ -1241,7 +1119,8 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
 const ReadQuran = () => {
   const { surahId } = useParams();
   if (surahId) {
-    const sId = Array.isArray(surahId) ? parseInt(surahId[0]) : parseInt(surahId);
+    const sIdStr = Array.isArray(surahId) ? surahId[0] : surahId;
+    const sId = parseInt(sIdStr);
     return <SurahReader surahId={sId} />;
   }
   return <SurahList />;

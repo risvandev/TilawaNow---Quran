@@ -44,7 +44,6 @@ const GlobalAudioPlayer = () => {
         closePlayer,
         seek,
         isFullPlayerOpen,
-        setFullPlayerOpen,
         playbackRate,
 
         setPlaybackRate,

@@ -30,6 +30,7 @@ export const metadata: Metadata = {
     description: "Read, listen, and reflect on the Holy Quran through a modern and respectful digital experience.",
     images: ["/og-image.png"],
   },
+  manifest: "/manifest.webmanifest",
 };
 
 export default function RootLayout({
@@ -44,7 +45,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://api.quran.com" />
         <link rel="dns-prefetch" href="https://verses.quran.com" />
         <link rel="dns-prefetch" href="https://api.quran.com" />
-        <link rel="preload" as="image" href="/hero_section.png" />
+        <link rel="preload" as="image" href="/hero_section.webp" />
       </head>
       <body className={inter.className} suppressHydrationWarning>
         <Providers>

@@ -28,12 +28,9 @@ export function usePipPlayer() {
         currentWordPosition,
         currentTime,
         duration,
-        loopMode,
-        playbackRate,
         togglePlay,
         playNext,
         playPrev,
-        closePlayer,
         seek,
     } = useAudioPlayer();
 
