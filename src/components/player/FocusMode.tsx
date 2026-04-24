@@ -44,7 +44,7 @@ const FocusMode: React.FC = () => {
         if (isFocusMode && currentVerseKey) {
             // Cycle through focus (2).jpg to focus (21).jpg
             const nextIndex = (imageIndex % 20) + 2;
-            setBgImage(`/focus_mod_images/focus (${nextIndex}).jpg`);
+            setBgImage(`/focus_mod_images/focus (${nextIndex}).webp`);
             setImageIndex(prev => prev + 1);
         }
     }, [isFocusMode, currentVerseKey]);
