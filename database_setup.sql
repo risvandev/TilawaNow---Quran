@@ -4,6 +4,7 @@
 -- 1. PROFILES (USER STATS)
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
+  full_name TEXT,
   total_ayahs_read INTEGER DEFAULT 0,
   unique_ayahs_read INTEGER DEFAULT 0,
   current_streak INTEGER DEFAULT 0,
@@ -198,3 +199,17 @@ BEGIN
   END IF;
 END $$;
 
+-- 11. AUTOMATIC PROFILE CREATION ON SIGNUP
+-- This trigger creates a profile record automatically when a user signs up
+CREATE OR REPLACE FUNCTION public.handle_new_user() 
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, full_name)
+  VALUES (new.id, new.raw_user_meta_data->>'full_name');
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();

@@ -1,3 +1,9 @@
+/**
+ * TilawaNow - A modern Quran platform.
+ * Copyright (c) 2026 Muhammed Risvan.
+ * Licensed under the GNU Affero General Public License v3.0.
+ */
+
 import getPuter from "./puter-service";
 import { fetchTafsir, fetchSingleVerse, TAFSIR_RESOURCES } from "./quran-api";
 

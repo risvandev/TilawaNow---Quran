@@ -29,11 +29,11 @@ TilawaNow provides a seamless and spiritually enriching experience for reading, 
 
 ## 🛠️ Built With
 
-- **React**
+- **Next.js**
 - **TypeScript**
-- **Vite**
 - **Tailwind CSS**
 - **shadcn/ui**
+- **Supabase**
 
 ## 🚀 Getting Started
 
@@ -41,10 +41,10 @@ To run this project locally:
 
 ```sh
 # Clone the repository
-git clone <YOUR_GIT_URL>
+git clone https://github.com/risvandev/TilawaNow---Quran.git
 
 # Navigate to directory
-cd serene-quran
+cd TilawaNow---Quran
 
 # Install dependencies
 npm install
@@ -52,6 +52,21 @@ npm install
 # Start the development server
 npm run dev
 ```
+
+
+---
+
+## 📄 License
+
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPL v3)**.
+
+> **IMPORTANT**: If you run a modified version of this software publicly, you **must** disclose your source code under the same license. This ensures that improvements made to the platform benefit the entire community.
+
+See the [LICENSE](LICENSE) file for the full text.
+
+## ⚖️ Copyright
+
+Copyright (c) 2026 **Muhammed Risvan**. All rights reserved.
 
 ---
 
