@@ -84,13 +84,37 @@ TilawaNow is built with a focus on scalability and maintainability:
    ```
    Fill in your Supabase and SMTP details.
 
-4. **Initialize Database**
-   Execute the contents of `database_setup.sql` in your Supabase SQL Editor.
+### 🗄️ Database Setup (Required)
 
-5. **Run Development Server**
-   ```bash
-   npm run dev
-   ```
+TilawaNow relies on a structured Supabase database for authentication, performance auditing, and persistence. The application will not function correctly without initializing the schema.
+
+#### What it configures:
+- **User Authentication**: Custom profile management linked to Supabase Auth.
+- **Audit System**: Real-time tracking of unique Ayahs read and streaks.
+- **Reading Progress**: Session-based activity tracking for analytics.
+- **Security**: Row Level Security (RLS) policies to ensure data privacy.
+
+#### Setup Instructions:
+
+1.  Open your **Supabase Dashboard**.
+2.  Navigate to the **SQL Editor** in the left sidebar.
+3.  Click **New Query**.
+4.  Copy the entire contents of [database_setup.sql](file:///e:/tilawanow/TilawaNow---Quran/database_setup.sql) from this repository.
+5.  Paste into the editor and click **Run**.
+
+#### Key Tables Created:
+- `profiles` → Core user data and preferences.
+- `reading_sessions` → High-level session tracking.
+- `reading_activity` → Granular, ayah-level interaction data.
+
+> [!CAUTION]
+> **This step is mandatory.**  
+> Row Level Security (RLS) is enabled by default in the script. Failure to run this will result in `403 Forbidden` or `Empty Result` errors across the application.
+
+### 4. Run Development Server
+```bash
+npm run dev
+```
 
 ## 📄 License
 
