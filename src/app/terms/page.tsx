@@ -151,7 +151,7 @@ const TermsConditions = () => {
       title: "11. Third-Party Services",
       content: (
         <div className="space-y-4">
-          <p>TilawaNow may rely on third-party services like Supabase, OpenRouter, and EmailJS. We are not responsible for their availability, performance, or security failures. Your use of those services is governed by their own terms and privacy policies.</p>
+          <p>TilawaNow may rely on third-party services like Supabase and OpenRouter. We are not responsible for their availability, performance, or security failures. Your use of those services is governed by their own terms and privacy policies.</p>
         </div>
       )
     },

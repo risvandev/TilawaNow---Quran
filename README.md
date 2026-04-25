@@ -29,11 +29,43 @@ TilawaNow provides a seamless and spiritually enriching experience for reading, 
 
 ## 🛠️ Built With
 
-- **Next.js**
-- **TypeScript**
-- **Tailwind CSS**
-- **shadcn/ui**
-- **Supabase**
+- **Supabase** (Database, Auth, RLS)
+- **Radix UI** & **shadcn/ui** (Accessible UI)
+- **Puter.js** & **OpenRouter** (AI Integration)
+- **Lenis** (Smooth Scrolling)
+
+## 🏗️ Architecture Overview
+
+TilawaNow is designed with a production-grade, scalable architecture:
+
+- **Next.js App Router**: Organized within `src/app` for efficient routing and server-side rendering.
+- **Domain-Driven Components**: UI is split into logical domains (auth, landing, player, reader) for maintainability.
+- **Context-Based State**: Global state is managed through React Context (e.g., `AuthContext`), ensuring data consistency across the platform.
+- **AI Pipeline**: A custom service layer integrates **Puter.js** and **OpenRouter**, providing streaming AI assistance grounded in verified Quranic data.
+- **Secure Backend**: Leveraging **Supabase** with strict Row Level Security (RLS) policies to protect user data and reading progress.
+- **PWA Ready**: Built to be installable and performant on mobile devices.
+
+## 📖 The Story
+
+TilawaNow was born out of a simple need: **depth without distraction**. 
+
+Many Quran applications are either too basic for serious study or too cluttered with ads and complex features. This platform focuses on the essentials—reading, listening, and understanding—powered by modern AI to help bridge the gap between traditional scholarship and the digital age.
+
+---
+
+## 📸 Preview
+
+![Desktop Preview](https://github.com/risvandev/TilawaNow---Quran/raw/main/public/preview-desktop.png)
+*Desktop Reader Interface*
+
+![Mobile Preview](https://github.com/risvandev/TilawaNow---Quran/raw/main/public/preview-mobile.png)
+*PWA Experience on Mobile*
+
+## 🔗 Live Demo
+
+Experience it live: **[TilawaNow.com](https://tilawanow.com)** (Coming Soon / Replace with real link)
+
+---
 
 ## 🚀 Getting Started
 
@@ -42,9 +74,6 @@ To run this project locally:
 ```sh
 # Clone the repository
 git clone https://github.com/risvandev/TilawaNow---Quran.git
-
-# Navigate to directory
-cd TilawaNow---Quran
 
 # Install dependencies
 npm install

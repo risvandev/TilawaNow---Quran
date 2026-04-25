@@ -168,6 +168,38 @@ const About = () => {
           <p className="text-xs uppercase tracking-widest text-muted-foreground mt-4">Goal: Purpose over trend-following.</p>
         </div>
       )
+    },
+    {
+      title: "11. Open Source",
+      content: (
+        <div className="space-y-6">
+          <div className="flex items-center gap-2 text-xl font-bold text-foreground">
+            <span>🔓</span> Open Source
+          </div>
+          <div className="space-y-4">
+            <p className="font-medium text-foreground">
+              TilawaNow is open source. Anyone can explore, use, and contribute to its development.
+            </p>
+            <p className="text-sm">
+              The project is released under the <b>GNU Affero General Public License (AGPL-3.0)</b> to ensure it remains free and community-driven.
+            </p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Anyone can use, study, and improve the platform</li>
+              <li>Source code is publicly available</li>
+            </ul>
+          </div>
+          <div className="pt-4">
+            <a
+              href="https://github.com/risvandev/TilawaNow---Quran"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center bg-foreground text-background px-6 py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity"
+            >
+              View Source Code
+            </a>
+          </div>
+        </div>
+      )
     }
   ];
 

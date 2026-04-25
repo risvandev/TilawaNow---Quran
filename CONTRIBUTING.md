@@ -12,9 +12,9 @@ If you have an idea for a new feature, please use the [Feature Request template]
 
 ### Pull Requests
 1. Fork the repo and create your branch from `main`.
-2. If you've added code that should be tested, add tests.
+2. If you've added complex logic, consider adding documentation on how it was verified.
 3. If you've changed APIs, update the documentation.
-4. Ensure the test suite passes.
+4. Ensure the build process completes without errors. (Testing suite is currently a Work in Progress).
 5. Make sure your code lints.
 
 ## 🎨 Code Style

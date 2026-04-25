@@ -119,7 +119,7 @@ const PrivacyPolicy = () => {
               <li>To improve platform performance, stability, and usability</li>
               <li>To analyze usage trends and feature effectiveness</li>
               <li>To communicate with you about your account, updates, and support</li>
-              <li>To send emails where necessary, including through third-party email services such as EmailJS</li>
+              <li>To send emails where necessary, including through third-party email services</li>
               <li>To detect, prevent, and respond to fraud, abuse, security incidents, and technical issues</li>
               <li>To comply with legal obligations where applicable</li>
             </ul>
@@ -171,7 +171,7 @@ const PrivacyPolicy = () => {
             <ul className="list-disc pl-5 space-y-2">
               <li><span className="font-bold">Supabase</span> – authentication, database, and backend services</li>
               <li><span className="font-bold">OpenRouter & Puter.js</span> – AI processing and response generation</li>
-              <li><span className="font-bold">EmailJS</span> – sending emails and notifications</li>
+              <li><span className="font-bold">Email Service Providers</span> – sending emails and notifications</li>
               <li>Other infrastructure or security providers as needed to run the service</li>
             </ul>
             <p>These providers may process data only for the purposes of delivering their services to us. They are not permitted to use your data for unrelated purposes unless their own policies apply.</p>
