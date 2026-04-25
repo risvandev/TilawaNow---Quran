@@ -155,23 +155,42 @@ const Dashboard = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <div className="max-w-md text-center animate-fade-in-up">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
-            <BookOpen className="w-8 h-8 text-primary" />
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        {/* Decorative Background Elements */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -z-10" />
+        <div className="absolute bottom-1/4 left-1/4 w-[300px] h-[300px] bg-accent/5 rounded-full blur-[100px] -z-10" />
+
+        <div className="max-w-md w-full text-center animate-fade-in-up">
+          <div className="glass-card p-8 md:p-12 border-primary/10 shadow-2xl relative overflow-hidden">
+             {/* Suble glass glow */}
+            <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 blur-3xl -z-10" />
+            
+            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-8 relative group transition-transform hover:scale-110">
+              <div className="absolute inset-0 rounded-full bg-primary/5 animate-pulse" />
+              <BookOpen className="w-10 h-10 text-primary relative z-10" />
+            </div>
+
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-4 tracking-tight">
+              Dashboard Access Restricted
+            </h1>
+            
+            <p className="text-muted-foreground/80 mb-10 text-sm md:text-base leading-relaxed text-balance">
+              The dashboard is exclusive to registered members. Join us to track your progress, save bookmarks, and view personal statistics.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Button asChild variant="hero" size="lg" className="w-full sm:w-auto px-8 shadow-lg shadow-primary/20">
+                <Link href="/signup">Create Account</Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="w-full sm:w-auto px-8 bg-secondary/30 backdrop-blur-sm border-border/50">
+                <Link href="/login">Sign In</Link>
+              </Button>
+            </div>
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-4">Dashboard Access Restricted</h1>
-          <p className="text-muted-foreground mb-8 text-lg">
-            The dashboard is exclusive to registered members. Join us to track your progress, save bookmarks, and view personal statistics.
+
+          <p className="mt-8 text-xs text-muted-foreground/60">
+            Access to the Holy Qur&apos;an is always free and open.
           </p>
-          <div className="flex gap-4 justify-center">
-            <Button asChild variant="hero" size="lg">
-              <Link href="/signup">Create Account</Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="/login">Sign In</Link>
-            </Button>
-          </div>
         </div>
       </div>
     );

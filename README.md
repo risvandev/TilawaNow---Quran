@@ -10,10 +10,10 @@
 
 ## 📸 Preview
 
-![Desktop Reader](https://github.com/risvandev/TilawaNow---Quran/raw/main/public/preview-desktop.png)
+![Desktop Reader](https://github.com/risvandev/TilawaNow---Quran/raw/main/public/Readme_preview/preview-desktop.png)
 *Desktop interface featuring clean typography and AI side-panel.*
 
-![Mobile PWA](https://github.com/risvandev/TilawaNow---Quran/raw/main/public/preview-mobile.png)
+![Mobile PWA](https://github.com/risvandev/TilawaNow---Quran/raw/main/public/Readme_preview/preview-mobile.png)
 *PWA optimized for performance on mobile devices.*
 
 ---
@@ -93,7 +93,7 @@ TilawaNow relies on a structured Supabase database for authentication, performan
 - **Audit System**: Real-time tracking of unique Ayahs read and streaks.
 - **Reading Progress**: Session-based activity tracking for analytics.
 - **Security**: Row Level Security (RLS) policies to ensure data privacy.
-
+Desktop interface featuring clean typography
 #### Setup Instructions:
 
 1.  Open your **Supabase Dashboard**.
