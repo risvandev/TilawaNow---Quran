@@ -12,6 +12,7 @@ import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { QuickStartSection } from "@/components/landing/QuickStartSection";
 import { HighlightedAyahSection } from "@/components/landing/HighlightedAyahSection";
 import { CTASection } from "@/components/landing/CTASection";
+import { OpenSourceSection } from "@/components/landing/OpenSourceSection";
 import { AppDownloadSection } from "@/components/landing/AppDownloadSection";
 import { Footer } from "@/components/layout/Footer";
 
@@ -23,6 +24,7 @@ const Landing = () => {
       <FeaturesSection />
       <QuickStartSection />
       <HighlightedAyahSection />
+      <OpenSourceSection />
       <CTASection />
       <AppDownloadSection />
       <Footer />

@@ -10,10 +10,10 @@
 
 ## 📸 Preview
 
-![Desktop Reader](https://github.com/risvandev/TilawaNow---Quran/raw/main/public/Readme_preview/preview-desktop.png)
+![Desktop Reader](https://github.com/risvandev/TilawaNow/raw/main/public/Readme_preview/preview-desktop.png)
 *Desktop interface featuring clean typography and AI side-panel.*
 
-![Mobile PWA](https://github.com/risvandev/TilawaNow---Quran/raw/main/public/Readme_preview/preview-mobile.png)
+![Mobile PWA](https://github.com/risvandev/TilawaNow/raw/main/public/Readme_preview/preview-mobile.png)
 *PWA optimized for performance on mobile devices.*
 
 ---
@@ -68,8 +68,8 @@ TilawaNow is built with a focus on scalability and maintainability:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/risvandev/TilawaNow---Quran.git
-   cd TilawaNow---Quran
+   git clone https://github.com/risvandev/TilawaNow.git
+   cd TilawaNow
    ```
 
 2. **Install dependencies**
@@ -93,13 +93,13 @@ TilawaNow relies on a structured Supabase database for authentication, performan
 - **Audit System**: Real-time tracking of unique Ayahs read and streaks.
 - **Reading Progress**: Session-based activity tracking for analytics.
 - **Security**: Row Level Security (RLS) policies to ensure data privacy.
-Desktop interface featuring clean typography
+
 #### Setup Instructions:
 
 1.  Open your **Supabase Dashboard**.
 2.  Navigate to the **SQL Editor** in the left sidebar.
 3.  Click **New Query**.
-4.  Copy the entire contents of [database_setup.sql](file:///e:/tilawanow/TilawaNow---Quran/database_setup.sql) from this repository.
+4.  Copy the entire contents of [database_setup.sql](file:///e:/tilawanow/TilawaNow/database_setup.sql) from this repository.
 5.  Paste into the editor and click **Run**.
 
 #### Key Tables Created:

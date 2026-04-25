@@ -24,6 +24,21 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://tilawanow.vercel.app/story</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tilawanow.vercel.app/info</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tilawanow.vercel.app/focus</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://tilawanow.vercel.app/contact</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>

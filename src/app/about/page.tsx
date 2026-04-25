@@ -190,7 +190,7 @@ const About = () => {
           </div>
           <div className="pt-4">
             <a
-              href="https://github.com/risvandev/TilawaNow---Quran"
+              href="https://github.com/risvandev/TilawaNow"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center bg-foreground text-background px-6 py-3 rounded-xl font-bold text-sm hover:opacity-90 transition-opacity"
