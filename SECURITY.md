@@ -14,7 +14,7 @@ We take the security of TilawaNow seriously. If you believe you have found a sec
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
-Instead, please report them by emailing **support@tilawanow.com**.
+Instead, please report them by emailing **tilawanow@gmail.com**.
 
 When reporting a vulnerability, please include:
 
