@@ -45,7 +45,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     }
                     return currentSession;
                 });
-                setLoading(false);
+                // If there is an OAuth redirect in progress, wait for onAuthStateChange to handle it
+                const isOAuthRedirect = typeof window !== 'undefined' && 
+                    (window.location.search.includes('code=') || 
+                     window.location.hash.includes('access_token=') ||
+                     window.location.hash.includes('error_description='));
+
+                if (!isOAuthRedirect) {
+                    setLoading(false);
+                }
             }
         });
 
