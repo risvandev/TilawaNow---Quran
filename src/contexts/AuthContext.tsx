@@ -21,23 +21,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { toast } = useToast();
 
     useEffect(() => {
+        let mounted = true;
+
         // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session);
-            setUser(session?.user ?? null);
-            setLoading(false);
+            if (mounted) {
+                setSession(session);
+                setUser(session?.user ?? null);
+                setLoading(false);
+            }
         });
 
         // Listen for changes
         const {
             data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session);
-            setUser(session?.user ?? null);
-            setLoading(false);
+        } = supabase.auth.onAuthStateChange((event, session) => {
+            if (mounted && event !== 'INITIAL_SESSION') {
+                setSession(session);
+                setUser(session?.user ?? null);
+            }
         });
 
-        return () => subscription.unsubscribe();
+        return () => {
+            mounted = false;
+            subscription.unsubscribe();
+        };
     }, []);
 
     const signOut = async () => {
