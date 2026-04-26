@@ -99,7 +99,7 @@ TilawaNow relies on a structured Supabase database for authentication, performan
 1.  Open your **Supabase Dashboard**.
 2.  Navigate to the **SQL Editor** in the left sidebar.
 3.  Click **New Query**.
-4.  Copy the entire contents of [database_setup.sql](file:///e:/tilawanow/TilawaNow/database_setup.sql) from this repository.
+4.  Copy the entire contents of `database_setup.sql` from this repository.
 5.  Paste into the editor and click **Run**.
 
 #### Key Tables Created:
