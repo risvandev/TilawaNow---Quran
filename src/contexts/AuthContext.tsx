@@ -23,8 +23,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         let mounted = true;
 
-        // Check active session
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        // Listen for all auth state changes (including INITIAL_SESSION)
+        const {
+            data: { subscription },
+        } = supabase.auth.onAuthStateChange((event, session) => {
             if (mounted) {
                 setSession(session);
                 setUser(session?.user ?? null);
@@ -32,13 +34,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             }
         });
 
-        // Listen for changes
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange((event, session) => {
-            if (mounted && event !== 'INITIAL_SESSION') {
-                setSession(session);
-                setUser(session?.user ?? null);
+        // Backup check in case the listener is delayed
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (mounted) {
+                setSession((currentSession) => {
+                    // Only apply the getSession result if we haven't already received a valid session from the listener
+                    if (!currentSession && session) {
+                        setUser(session.user);
+                        return session;
+                    }
+                    return currentSession;
+                });
+                setLoading(false);
             }
         });
 
