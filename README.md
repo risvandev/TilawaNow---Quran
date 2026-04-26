@@ -28,7 +28,7 @@ TilawaNow is a technical solution to a common problem: digital Quran platforms o
 
 ## 🚀 Core Features
 
-- **AI-Assisted Grounding**: Utilizes Puter.js and OpenRouter to provide explanations grounded in verified Tafsir (Ibn Kathir).
+- **AI-Assisted Grounding**: Utilizes Puter.js to provide explanations grounded in verified Tafsir (Ibn Kathir).
 - **Audit System**: Real-time tracking of unique Ayahs read, streaks, and total completion stats.
 - **Dynamic Reader**: Custom-built reader supporting multiple scripts (Uthmani, IndoPak, Imlaei) and translations.
 - **Audio Pipeline**: Multi-reciter audio integration with word-level highlighting and synchronization.
@@ -41,7 +41,7 @@ TilawaNow is built with a focus on scalability and maintainability:
 
 - **Frontend**: Next.js 14 (App Router) with React Server Components for optimal SEO and initial load performance.
 - **State Management**: Context-based architecture (Auth, UI state) to ensure consistency across the player and reader.
-- **AI Pipeline**: Custom service layer integrating **Puter.js** for browser-side LLM interaction and **OpenRouter** for advanced models.
+- **AI Pipeline**: Custom service layer integrating **Puter.js** for browser-side LLM interaction.
 - **Database**: Supabase PostgreSQL with **Row Level Security (RLS)** ensuring every data point is owned and accessible only by the user.
 - **Styling**: Tailwind CSS with a strict design system (Radix UI primitives).
 
@@ -52,7 +52,7 @@ TilawaNow is built with a focus on scalability and maintainability:
 | **Framework** | Next.js 14 |
 | **Language** | TypeScript |
 | **Database/Auth** | Supabase |
-| **AI SDK** | Puter.js / OpenRouter |
+| **AI SDK** | Puter.js |
 | **Styling** | Tailwind CSS / shadcn/ui |
 | **Animations** | Lenis (Smooth Scroll) / Framer Motion |
 | **Email** | Nodemailer (SMTP) |
