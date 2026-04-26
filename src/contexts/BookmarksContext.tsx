@@ -84,18 +84,36 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
         }
     }, [user]);
 
+    const clearCache = useCallback(() => {
+        if (user) sessionStorage.removeItem(`user_data_${user.id}`);
+    }, [user]);
+
     const fetchUserData = async () => {
         setIsLoading(true);
+        const cacheKey = `user_data_${user!.id}`;
+        
         try {
+            // Check session cache first to prevent redundant network requests
+            const cachedDataStr = sessionStorage.getItem(cacheKey);
+            if (cachedDataStr) {
+                const cachedData = JSON.parse(cachedDataStr);
+                setBookmarks(cachedData.bookmarks);
+                setReadingHistory(cachedData.readingHistory);
+                setUserStats(cachedData.userStats);
+                setDailyActivity(cachedData.dailyActivity);
+                setMarks(cachedData.marks);
+                setIsLoading(false);
+                return;
+            }
+
             // Fetch Bookmarks
             const { data: bookmarksData, error: bookmarksError } = await supabase
                 .from('bookmarks')
-                .select('*')
+                .select('id, surah_id, verse_key, created_at')
                 .eq('user_id', user!.id)
                 .order('created_at', { ascending: false });
 
             if (bookmarksError) throw bookmarksError;
-            setBookmarks(bookmarksData || []);
 
             // Fetch History
             const { data: historyData, error: historyError } = await supabase
@@ -105,9 +123,16 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
                 .order('last_read_at', { ascending: false });
 
             if (historyError) throw historyError;
-            setReadingHistory(historyData || []);
 
             // Fetch User Stats & Goal
+            let newUserStats = {
+                totalAyahsRead: 0,
+                uniqueAyahsRead: 0,
+                currentStreak: 0,
+                lastActiveDate: null as string | null,
+                totalActiveDays: 0
+            };
+
             const { data: profileData, error: profileError } = await supabase
                 .from('profiles')
                 .select('total_ayahs_read, unique_ayahs_read, current_streak, last_active_date')
@@ -119,13 +144,13 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
             }
 
             if (profileData) {
-                setUserStats({
+                newUserStats = {
+                    ...newUserStats,
                     totalAyahsRead: profileData.total_ayahs_read || 0,
                     uniqueAyahsRead: profileData.unique_ayahs_read || 0,
                     currentStreak: profileData.current_streak || 0,
                     lastActiveDate: profileData.last_active_date,
-                    totalActiveDays: 0 // Will update below
-                });
+                };
             }
 
             // Fetch Daily Activity (Last 7 Days) for Chart
@@ -136,29 +161,46 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
                 .gte('date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()) // Last 7 days
                 .order('date', { ascending: true });
 
+            let formattedActivity: {date: string, count: number}[] = [];
             if (activityData) {
-                setDailyActivity(activityData.map(d => ({ date: d.date, count: d.ayahs_count })));
+                formattedActivity = activityData.map(d => ({ date: d.date, count: d.ayahs_count }));
             }
 
             // Fetch Total Active Days Count
             const { count: activeCount, error: countError } = await supabase
                 .from('daily_activity')
-                .select('*', { count: 'exact', head: true })
+                .select('id', { count: 'exact', head: true })
                 .eq('user_id', user!.id);
 
             if (!countError && activeCount !== null) {
-                setUserStats(prev => ({ ...prev, totalActiveDays: activeCount }));
+                newUserStats.totalActiveDays = activeCount;
             }
 
             // Fetch Marks
             const { data: marksData, error: marksError } = await supabase
                 .from('marks')
-                .select('*')
+                .select('id, surah_id, ayah_id, type, created_at')
                 .eq('user_id', user!.id)
                 .order('created_at', { ascending: false });
 
             if (marksError) throw marksError;
+
+            // Update States
+            setBookmarks(bookmarksData || []);
+            setReadingHistory(historyData || []);
+            setUserStats(newUserStats);
+            setDailyActivity(formattedActivity);
             setMarks(marksData || []);
+
+            // Save to Session Cache
+            sessionStorage.setItem(cacheKey, JSON.stringify({
+                bookmarks: bookmarksData || [],
+                readingHistory: historyData || [],
+                userStats: newUserStats,
+                dailyActivity: formattedActivity,
+                marks: marksData || []
+            }));
+
         } catch (error) {
             console.error('Error fetching user data:', error);
         } finally {
@@ -194,6 +236,7 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
 
             // Replace temp with real
             setBookmarks(prev => prev.map(b => b.id === tempId ? data : b));
+            clearCache(); // Clear cache on mutation
 
             toast({ title: "Bookmark saved", description: `Verse ${verseKey} added to bookmarks.` });
         } catch (error) {
@@ -201,7 +244,7 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
             setBookmarks(prev => prev.filter(b => b.id !== tempId)); // Revert
             toast({ variant: "destructive", title: "Error", description: "Failed to save bookmark." });
         }
-    }, [user, toast]);
+    }, [user, toast, clearCache]);
 
     const removeBookmark = useCallback(async (verseKey: string) => {
         if (!user) return;
@@ -220,6 +263,7 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
                 .eq('verse_key', verseKey);
 
             if (error) throw error;
+            clearCache(); // Clear cache on mutation
             toast({ title: "Bookmark removed" });
         } catch (error) {
             console.error('Error removing bookmark:', error);
@@ -227,7 +271,7 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
             fetchUserData();
             toast({ variant: "destructive", title: "Error", description: "Failed to remove bookmark." });
         }
-    }, [user, toast]);
+    }, [user, toast, clearCache]);
 
     const isBookmarked = useCallback((verseKey: string) => {
         return bookmarks.some(b => b.verse_key === verseKey);
@@ -323,6 +367,7 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
                     current_streak: newStreak,
                     last_active_date: new Date().toISOString()
                 }).eq('id', user.id);
+                clearCache();
             }
         } catch (error: any) {
             // Silence expected 401/403 or network errors to keep console clean
@@ -421,6 +466,7 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
                     .delete()
                     .eq('id', existingMark.id);
                 if (error) throw error;
+                clearCache();
             } catch (error) {
                 console.error('Error removing mark:', error);
                 setMarks(prev => [...prev, existingMark]); // Revert
@@ -485,6 +531,7 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
                 
                 // Replace temp with real
                 setMarks(prev => prev.map(m => m.id === tempId ? data : m));
+                clearCache();
             } catch (error: any) {
                 console.error('Final Mark Update Error:', error);
                 fetchUserData(); // Re-sync with DB on failure
@@ -495,7 +542,7 @@ export const BookmarksProvider = ({ children }: { children: React.ReactNode }) =
                 });
             }
         }
-    }, [user, marks, toast]);
+    }, [user, marks, toast, clearCache]);
 
     const isMarked = useCallback((surahId: number, ayahId: number | null, type: 'ayah' | 'surah') => {
         return marks.some(m => 

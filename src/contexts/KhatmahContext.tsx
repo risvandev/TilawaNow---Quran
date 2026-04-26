@@ -66,8 +66,8 @@ export const KhatmahProvider: React.FC<{ children: React.ReactNode }> = ({ child
             }
         };
 
-        // Simple debounce
-        const timer = setTimeout(updateDB, 2000);
+        // Simple debounce to prevent egress spikes during continuous audio playback
+        const timer = setTimeout(updateDB, 15000);
         return () => clearTimeout(timer);
 
     }, [currentVerseKey, isKhatmahActive, currentSurah, user]);
@@ -84,7 +84,7 @@ export const KhatmahProvider: React.FC<{ children: React.ReactNode }> = ({ child
             try {
                 const { data, error } = await supabase
                     .from('khatmah_progress')
-                    .select('*')
+                    .select('surah_id, verse_key, last_read_at')
                     .eq('user_id', user.id)
                     .maybeSingle();
 

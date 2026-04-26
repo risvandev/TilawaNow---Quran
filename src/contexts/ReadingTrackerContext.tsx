@@ -22,7 +22,7 @@ interface ReadingTrackerContextType {
 
 const ReadingTrackerContext = createContext<ReadingTrackerContextType | undefined>(undefined);
 
-const FLUSH_INTERVAL = 60000; // 60 seconds (optimized for free plan)
+const FLUSH_INTERVAL = 120000; // 120 seconds (optimized for free plan egress limits)
 
 export const ReadingTrackerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
