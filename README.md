@@ -78,11 +78,10 @@ TilawaNow is built with a focus on scalability and maintainability:
    ```
 
 3. **Configure Environment Variables**
-   Create a `.env` file based on `.env.example`:
+   Create a `.env` file in the root directory, copy the contents from `.env.example`, and paste your actual credentials:
    ```bash
    cp .env.example .env
    ```
-   Fill in your Supabase and SMTP details.
 
 ### 🗄️ Database Setup (Required)
 
@@ -107,9 +106,14 @@ TilawaNow relies on a structured Supabase database for authentication, performan
 - `reading_sessions` → High-level session tracking.
 - `reading_activity` → Granular, ayah-level interaction data.
 
-> [!CAUTION]
-> **This step is mandatory.**  
 > Row Level Security (RLS) is enabled by default in the script. Failure to run this will result in `403 Forbidden` or `Empty Result` errors across the application.
+
+### 📧 SMTP Setup (Optional)
+This is required specifically for the **Contact Form** and **Invite** features. (Note: Supabase Auth emails are managed separately in the Supabase Dashboard).
+
+To enable these features, configure your SMTP provider (e.g., Resend, Mailtrap) in your `.env` file:
+- **Sender Details**: Set `SMTP_FROM_EMAIL` and `SMTP_FROM_NAME`.
+- **Provider Settings**: Fill in `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASS`.
 
 ### 4. Run Development Server
 ```bash
