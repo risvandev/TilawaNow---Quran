@@ -28,10 +28,6 @@ const nextConfig = {
   typescript: {
     // Re-enabled for production readiness
     ignoreBuildErrors: false, 
-  },
-  eslint: {
-    // Re-enabled for production readiness
-    ignoreDuringBuilds: false, 
   }
 };
 

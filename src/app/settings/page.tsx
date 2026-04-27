@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -34,7 +33,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings as SettingsIcon, Moon, Sun, Globe, User, Bell, BookOpen, Volume2, Play, Loader2, Square, Send, ChevronLeft, ChevronRight, Pencil, Check, X, Heart, HelpCircle, Mail, Sparkles } from "lucide-react";
+import { Settings as SettingsIcon, Moon, Sun, Globe, User, Bell, BookOpen, Volume2, Play, Loader2, Square, Send, ChevronLeft, ChevronRight, Pencil, Check, X, Heart, HelpCircle, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getTranslationsByLanguage, AVAILABLE_RECITERS } from "@/lib/quran-api";
 import { useAuth } from "@/contexts/AuthContext";

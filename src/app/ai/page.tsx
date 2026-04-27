@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,8 +14,7 @@ import {
   X,
   Quote,
   Copy,
-  Sparkles,
-  BookOpen
+  Sparkles
 } from "lucide-react";
 
 import getPuter from "@/lib/puter-service";
