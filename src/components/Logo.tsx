@@ -18,10 +18,7 @@ export const Logo = ({
 }: LogoProps) => {
     const [showArabic, setShowArabic] = useState(false);
     const [isFading, setIsFading] = useState(false);
-    const [mounted, setMounted] = useState(false);
-
     useEffect(() => {
-        setMounted(true);
         const interval = setInterval(() => {
             setIsFading(true);
             setTimeout(() => {
