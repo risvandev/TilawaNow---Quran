@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { fetchSurah, fetchSurahInfo, Surah } from "@/lib/quran-api";
-import { chatWithAI } from "@/lib/ai-service";
 import { ChevronLeft, Loader2 } from "lucide-react";
 
 interface StructuredInfo {
