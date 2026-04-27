@@ -81,9 +81,17 @@ const toArabicNumerals = (num: number | string | undefined | null) => {
 // Helper to play word audio
 const playWordAudio = (audioUrl: string | null) => {
   if (!audioUrl) return;
-  const url = audioUrl.startsWith("http") ? audioUrl : `https://audio.qurancdn.com/${audioUrl}`;
+  let url = audioUrl;
+  if (url.startsWith("//")) {
+    url = `https:${url}`;
+  } else if (!url.startsWith("http")) {
+    url = `https://audio.qurancdn.com/${url}`;
+  }
   const audio = new Audio(url);
-  audio.play().catch(e => console.error("Error playing word audio:", e));
+  audio.play().catch(e => {
+    console.error("Error playing word audio:", e);
+    console.error("Attempted URL:", url);
+  });
 };
 
 // Word component with hover tooltip for meaning
@@ -277,8 +285,7 @@ const VerseRow = React.memo(({
         className={cn(
           isFatihaBismillah 
             ? "relative block mb-12 px-4 text-center w-full" 
-            : "relative inline px-0.5 transition-colors duration-500", 
-          isCurrentVerse && !isFatihaBismillah && "bg-primary/10 text-primary rounded-md"
+            : "relative inline px-0.5 transition-colors duration-500"
         )}
         id={`verse-${surahId}:${verse.verse_number}`}
       >
@@ -647,6 +654,17 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
     return map;
   }, [verseAudios, priorityAudios]);
 
+  const versesByPage = useMemo(() => {
+    return verses.reduce((acc: Record<number, Verse[]>, v) => {
+      const p = v.page_number;
+      if (!acc[p]) acc[p] = [];
+      acc[p].push(v);
+      return acc;
+    }, {});
+  }, [verses]);
+
+  const pages = useMemo(() => Object.entries(versesByPage), [versesByPage]);
+
   const { 
     preheatAudio, 
     currentVerseKey, 
@@ -669,6 +687,9 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
   const lastLoggedVerseRef = useRef<string | null>(null);
   const visibleAyahsRef = useRef<Set<number>>(new Set());
   const virtuosoRef = useRef<any>(null);
+  const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true);
+  const userScrollingRef = useRef(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const logVerseReading = useCallback((sId: number, vKey: string) => {
     if (lastLoggedVerseRef.current === vKey) return;
@@ -802,6 +823,98 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
     fetchHistory();
   }, [surahId]);
 
+  // Detect manual scrolling to pause auto-scroll
+  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const resetInactivityTimer = () => {
+      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+      
+      // If playing, set a timer to resume auto-scroll after 3 seconds of inactivity
+      if (isPlaying) {
+        inactivityTimerRef.current = setTimeout(() => {
+          setIsAutoScrollEnabled(true);
+        }, 3000);
+      }
+    };
+
+    const handleUserScroll = () => {
+      if (userScrollingRef.current) return;
+      
+      // If we detect a scroll that wasn't triggered by our code
+      setIsAutoScrollEnabled(false);
+      resetInactivityTimer();
+    };
+
+    const handleTouchStart = () => { 
+      userScrollingRef.current = true; 
+      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+    };
+
+    const handleTouchEnd = () => { 
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = setTimeout(() => {
+        userScrollingRef.current = false;
+      }, 1000);
+      resetInactivityTimer();
+    };
+
+    window.addEventListener('wheel', handleUserScroll, { passive: true });
+    window.addEventListener('touchmove', handleUserScroll, { passive: true });
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    window.addEventListener('mousedown', resetInactivityTimer, { passive: true });
+    window.addEventListener('keydown', resetInactivityTimer, { passive: true });
+
+    return () => {
+      window.removeEventListener('wheel', handleUserScroll);
+      window.removeEventListener('touchmove', handleUserScroll);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('mousedown', resetInactivityTimer);
+      window.removeEventListener('keydown', resetInactivityTimer);
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+    };
+  }, [isPlaying]);
+  
+  // Handle manual scroll to current ayah request
+  useEffect(() => {
+    const handleScrollToAyah = (e: any) => {
+      const verseKey = e.detail?.verseKey;
+      if (!verseKey) return;
+      
+      const verseIndex = verses.findIndex(v => v.verse_key === verseKey);
+      if (verseIndex >= 0) {
+        // When user explicitly clicks "scroll to ayah", re-enable auto-scroll
+        setIsAutoScrollEnabled(true);
+        userScrollingRef.current = true;
+
+        if (virtuosoRef.current) {
+          virtuosoRef.current.scrollToIndex({
+            index: verseIndex,
+            align: 'center',
+            behavior: 'smooth'
+          });
+        } else {
+          // Fallback for non-virtualized mode (e.g. Reading Mode)
+          const element = document.getElementById(`verse-${verseKey}`);
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }
+
+        // Reset userScrolling after animation
+        setTimeout(() => {
+          userScrollingRef.current = false;
+        }, 1000);
+      }
+    };
+
+    window.addEventListener('scroll-to-ayah', handleScrollToAyah);
+    return () => window.removeEventListener('scroll-to-ayah', handleScrollToAyah);
+  }, [verses]);
+
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
@@ -849,8 +962,8 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
       const verseIndex = verses.findIndex(v => v.verse_key === currentVerseKey);
       
       if (verseIndex >= 0) {
-        // Auto-scrolling disabled to prevent movement during playback
-        /*
+      if (verseIndex >= 0 && isPlaying && isAutoScrollEnabled) {
+        userScrollingRef.current = true;
         if (virtuosoRef.current) {
           virtuosoRef.current.scrollToIndex({
             index: verseIndex,
@@ -863,7 +976,12 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
             element.scrollIntoView({ behavior: "smooth", block: "center" });
           }
         }
-        */
+        
+        // Reset userScrolling after animation
+        setTimeout(() => {
+          userScrollingRef.current = false;
+        }, 1000);
+      }
       }
 
       logVerseReading(surahId, currentVerseKey);
@@ -1032,38 +1150,43 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
       )}
 
       {isReadMode ? (
-        <div className="space-y-8 optimize-gpu">
-          {Object.entries(verses.reduce((acc: Record<number, Verse[]>, v) => { const p = v.page_number; if (!acc[p]) acc[p] = []; acc[p].push(v); return acc; }, {})).map(([pageNumber, pageVerses]) => (
-            <div key={pageNumber} className="max-w-4xl mx-auto py-12 mushaf-layout text-foreground relative" dir="rtl">
-              <div className="mb-4">
-                {pageVerses.map((verse) => (
-                  <VerseRow
-                    key={verse.id}
-                    verse={verse}
-                    surahId={surahId}
-                    verseAudios={combinedAudios}
-                    quranScript={quranScript}
-                    isReadMode={true}
-                    status={ayahStates[`${surahId}:${verse.verse_number}`] || historicalStates[`${surahId}:${verse.verse_number}`]}
-                    isLoading={isLoading}
-                    handleCopyVerse={handleCopyVerseCallback}
-                    isCurrentVerse={currentVerseKey === verse.verse_key}
-                    isVersePlayingNow={currentVerseKey === verse.verse_key && isPlaying}
-                    currentWordPosition={currentVerseKey === verse.verse_key ? currentWordPosition : null}
-                    marked={isMarked(surahId, verse.verse_number, 'ayah')}
-                    onPlayVerse={handlePlayVerseCallback}
-                    onPlayFromVerse={handlePlayFromVerseCallback}
-                    onTogglePlay={togglePlay}
-                    onToggleMark={handleToggleMark}
-                    onSetLoopMode={handleSetLoopMode}
-                    onPreheat={preheatAudio}
-                    loopMode={loopMode}
-                  />
-                ))}
+        <div className="min-h-[80vh] optimize-gpu">
+          <Virtuoso
+            useWindowScroll
+            data={pages}
+            increaseViewportBy={2000}
+            itemContent={(_index, [pageNumber, pageVerses]) => (
+              <div key={pageNumber} className="max-w-4xl mx-auto py-12 mushaf-layout text-foreground relative" dir="rtl">
+                <div className="mb-4">
+                  {pageVerses.map((verse) => (
+                    <VerseRow
+                      key={verse.id}
+                      verse={verse}
+                      surahId={surahId}
+                      verseAudios={combinedAudios}
+                      quranScript={quranScript}
+                      isReadMode={true}
+                      status={ayahStates[`${surahId}:${verse.verse_number}`] || historicalStates[`${surahId}:${verse.verse_number}`]}
+                      isLoading={isLoading}
+                      handleCopyVerse={handleCopyVerseCallback}
+                      isCurrentVerse={currentVerseKey === verse.verse_key}
+                      isVersePlayingNow={currentVerseKey === verse.verse_key && isPlaying}
+                      currentWordPosition={currentVerseKey === verse.verse_key ? currentWordPosition : null}
+                      marked={isMarked(surahId, verse.verse_number, 'ayah')}
+                      onPlayVerse={handlePlayVerseCallback}
+                      onPlayFromVerse={handlePlayFromVerseCallback}
+                      onTogglePlay={togglePlay}
+                      onToggleMark={handleToggleMark}
+                      onSetLoopMode={handleSetLoopMode}
+                      onPreheat={preheatAudio}
+                      loopMode={loopMode}
+                    />
+                  ))}
+                </div>
+                <div className="mt-12 pt-6 border-t border-border w-full flex justify-center text-sm font-sans text-muted-foreground select-none">Page {pageNumber}</div>
               </div>
-              <div className="mt-12 pt-6 border-t border-border w-full flex justify-center text-sm font-sans text-muted-foreground select-none">Page {pageNumber}</div>
-            </div>
-          ))}
+            )}
+          />
         </div>
       ) : (
         <div className="min-h-[80vh] optimize-gpu">
@@ -1075,7 +1198,7 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
               const idx = currentVerseKey ? verses.findIndex(v => v.verse_key === currentVerseKey) : 0;
               return idx >= 0 ? idx : 0;
             })()}
-            increaseViewportBy={1000}
+            increaseViewportBy={2500}
             itemsRendered={handleItemsRendered}
             itemContent={(_index, verse) => (
               <div className="pb-4 px-1">

@@ -109,22 +109,21 @@ const GlobalAudioPlayer = () => {
                         <div
                             className="flex items-center gap-2.5 md:gap-3 min-w-0 flex-1 cursor-pointer group"
                             onClick={() => {
-                                const url = `/read/${currentSurah!.id}#verse-${currentVerseKey}`;
                                 if (pathname === `/read/${currentSurah!.id}`) {
-                                    const element = document.getElementById(`verse-${currentVerseKey}`);
-                                    if (element) {
-                                        element.scrollIntoView({ behavior: "smooth", block: "center" });
-                                    }
+                                    window.dispatchEvent(new CustomEvent('scroll-to-ayah', { 
+                                        detail: { verseKey: currentVerseKey } 
+                                    }));
                                 } else {
+                                    const url = `/read/${currentSurah!.id}#verse-${currentVerseKey}`;
                                     router.push(url);
                                 }
                             }}
                         >
-                            <div className="hidden md:flex w-11 h-11 rounded-xl bg-primary/10 items-center justify-center font-bold text-primary shrink-0 text-sm ring-1 ring-primary/20 group-hover:bg-primary/20 group-hover:ring-primary/40 transition-all duration-200 shadow-sm">
+                            <div className="flex w-9 h-9 md:w-11 md:h-11 rounded-xl bg-primary/10 items-center justify-center font-bold text-primary shrink-0 text-xs md:text-sm ring-1 ring-primary/20 group-hover:bg-primary/20 group-hover:ring-primary/40 transition-all duration-200 shadow-sm">
                                 {currentSurah!.id}
                             </div>
-                            <div className="min-w-0 flex-1 hidden sm:block">
-                                <h4 className="font-semibold text-xs md:text-sm truncate leading-tight group-hover:text-primary transition-colors">
+                            <div className="min-w-0 flex-1">
+                                <h4 className="font-semibold text-[11px] md:text-sm truncate leading-tight group-hover:text-primary transition-colors">
                                     {currentSurah!.name_simple}
                                 </h4>
                                 <div className="flex items-center gap-1.5 mt-0.5">

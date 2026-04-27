@@ -126,7 +126,7 @@ export const fetchVerses = async (
     // Ensure we request the specific script field for both words and verses
     const scriptField = script === "text_indopak" ? "text_indopak" : "text_uthmani";
     const response = await fetch(
-      `${BASE_URL}/verses/by_chapter/${surahNumber}?language=en&words=true&word_fields=${scriptField}&translations=${translationId}&fields=${scriptField}&per_page=${perPage}&page=${page}`
+      `${BASE_URL}/verses/by_chapter/${surahNumber}?language=en&words=true&word_fields=${scriptField},audio_url&translations=${translationId}&fields=${scriptField}&per_page=${perPage}&page=${page}`
     );
     const data = await response.json();
     return {

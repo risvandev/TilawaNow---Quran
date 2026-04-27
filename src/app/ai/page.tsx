@@ -394,39 +394,37 @@ const AIAssistance = () => {
         )}
 
         {showOnboarding ? (
-          /* Seamless Auth Gate - No Box */
-          <div className="max-w-md w-full mx-auto text-center space-y-12 animate-fade-in-up relative group px-6">
-            {/* Ambient Glow */}
-            <div className="absolute -inset-40 bg-primary/10 rounded-full blur-[120px] opacity-20 pointer-events-none" />
+          /* Minimalist Auth Gate */
+          <div className="max-w-sm w-full mx-auto text-center space-y-8 animate-fade-in-up relative px-6">
+            <div className="absolute -inset-20 bg-primary/5 rounded-full blur-[100px] opacity-20 pointer-events-none" />
 
-            <div className="flex items-center justify-center mx-auto mb-6 transform rotate-3 group-hover:rotate-6 transition-transform duration-500">
+            <div className="flex items-center justify-center mx-auto mb-4 opacity-80">
               <Image
                 src="/quran-logo.svg"
                 alt="TilawaNow Logo"
-                width={80}
-                height={80}
-                className="text-primary"
+                width={48}
+                height={48}
+                className="text-primary brightness-0 dark:brightness-125 dark:grayscale"
               />
             </div>
 
-            <div className="space-y-4">
-              <h3 className="text-3xl font-bold text-foreground tracking-tight">Use AI in TilawaNow</h3>
-              <p className="text-base text-muted-foreground leading-relaxed">
-                Get explanations, meanings, and guidance while reading.
-                This feature runs on a secure AI service and may require a quick account connection.
+            <div className="space-y-2">
+              <h3 className="text-xl font-semibold text-foreground tracking-tight">AI Companion</h3>
+              <p className="text-sm text-muted-foreground/80 leading-relaxed">
+                Connect your account to access AI-powered meanings and guidance while reading.
               </p>
             </div>
 
-            <div className="pt-4">
+            <div className="pt-2">
               <Button
                 onClick={handlePuterSignIn}
                 size="lg"
                 variant="hero"
-                className="w-full rounded-2xl text-lg h-14 shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all mb-4"
+                className="w-full rounded-xl text-sm font-bold h-12 shadow-lg shadow-primary/10 hover:scale-[1.01] transition-all mb-4"
               >
                 Connect & Continue
               </Button>
-              <p className="text-[10px] text-muted-foreground/60 uppercase tracking-widest font-bold">
+              <p className="text-[9px] text-muted-foreground/40 uppercase tracking-[0.2em] font-medium">
                 Powered by Puter
               </p>
             </div>

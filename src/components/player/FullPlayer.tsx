@@ -112,12 +112,20 @@ const FullPlayer: React.FC = () => {
                     </div>
 
                     <div className="flex-1 overflow-y-auto px-6 py-6 flex flex-col items-center">
-                        {/* Surah Header */}
-                        <div className="text-center mb-6">
-                            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center font-bold text-primary text-xl mx-auto mb-3 ring-1 ring-primary/20 shadow-lg shadow-primary/10">
+                        {/* Surah Header - Click to scroll to ayah */}
+                        <div 
+                            className="text-center mb-6 cursor-pointer group"
+                            onClick={() => {
+                                window.dispatchEvent(new CustomEvent('scroll-to-ayah', { 
+                                    detail: { verseKey: currentVerseKey } 
+                                }));
+                                setFullPlayerOpen(false); // Collapse to show the verse
+                            }}
+                        >
+                            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center font-bold text-primary text-xl mx-auto mb-3 ring-1 ring-primary/20 shadow-lg shadow-primary/10 group-hover:bg-primary/20 group-hover:ring-primary/40 transition-all">
                                 {currentSurah.id}
                             </div>
-                            <h2 className="font-arabic text-2xl md:text-3xl text-foreground mb-1">
+                            <h2 className="font-arabic text-2xl md:text-3xl text-foreground mb-1 group-hover:text-primary transition-colors">
                                 سورة {currentSurah.name_arabic}
                             </h2>
                             <p className="text-sm text-muted-foreground font-medium">

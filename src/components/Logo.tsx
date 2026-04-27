@@ -35,15 +35,14 @@ export const Logo = ({
         return () => clearInterval(interval);
     }, []);
 
-    // Defalt to white logo for SSR to match dark theme default
-    const logoSrc = mounted && resolvedTheme === "light" 
-        ? "/quransite_black_small.png" 
-        : "/quransite_white_small.png";
-
     return (
         <div className={cn("flex items-center gap-2", className)}>
             <div className={cn("rounded-lg bg-primary/10 flex items-center justify-center p-1 backdrop-blur-sm", iconClassName)}>
-                <img src={logoSrc} alt="TilawaNow Logo" className="w-full h-full object-contain" />
+                <img 
+                    src="/quran-logo.svg" 
+                    alt="TilawaNow Logo" 
+                    className="w-full h-full object-contain brightness-0 dark:brightness-110 dark:grayscale transition-all" 
+                />
             </div>
 
             <span

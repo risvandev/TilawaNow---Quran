@@ -88,7 +88,7 @@ const FocusMode: React.FC = () => {
     return (
         <div
             className={cn(
-                "fixed inset-0 z-[300] bg-background flex flex-col items-center justify-between transition-all duration-500 ease-in-out overflow-hidden",
+                "fixed inset-0 z-[300] dark bg-[#020202] text-zinc-50 flex flex-col items-center justify-between transition-all duration-500 ease-in-out overflow-hidden",
                 isFocusMode ? "opacity-100" : "opacity-0 pointer-events-none"
             )}
         >
