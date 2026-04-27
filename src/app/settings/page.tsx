@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -33,10 +34,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings as SettingsIcon, Moon, Sun, Globe, User, Bell, BookOpen, Volume2, Play, Loader2, Square, Send, ChevronLeft, ChevronRight, Pencil, Check, X, Heart, HelpCircle, Mail } from "lucide-react";
+import { Settings as SettingsIcon, Moon, Sun, Globe, User, Bell, BookOpen, Volume2, Play, Loader2, Square, Send, ChevronLeft, ChevronRight, Pencil, Check, X, Heart, HelpCircle, Mail, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getTranslationsByLanguage, AVAILABLE_RECITERS } from "@/lib/quran-api";
 import { useAuth } from "@/contexts/AuthContext";
+import { RestrictedAccess } from "@/components/auth/RestrictedAccess";
 
 declare global {
   interface Window {
@@ -180,7 +182,7 @@ const Settings = () => {
     try {
       await supabase.from('profiles').update({ [key]: value }).eq('id', user.id);
     } catch (error) {
-      console.error(`Error updating ${key}:`, error);
+      console.error("Error updating setting:", key, error);
     }
   };
 
@@ -304,6 +306,16 @@ const Settings = () => {
   const handleDonate = () => {
     setIsDonateOpen(true);
   };
+
+  if (!user) {
+    return (
+      <RestrictedAccess 
+        title="Settings Restricted"
+        description="Sign in to customize your experience and save preferences."
+        icon={SettingsIcon}
+      />
+    );
+  }
 
   return (
     <div className="bg-background flex-1">

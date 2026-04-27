@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,7 +14,9 @@ import {
   ChevronDown,
   X,
   Quote,
-  Copy
+  Copy,
+  Sparkles,
+  BookOpen
 } from "lucide-react";
 
 import getPuter from "@/lib/puter-service";
@@ -26,6 +29,7 @@ import {
 } from "@/lib/ai-service";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { RestrictedAccess } from "@/components/auth/RestrictedAccess";
 import { useAICompanion } from "@/contexts/AICompanionContext";
 import {
   Tooltip,
@@ -341,6 +345,16 @@ const AIAssistance = () => {
   };
 
   if (!mounted) return null;
+
+  if (!user) {
+    return (
+      <RestrictedAccess 
+        title="AI Chat Restricted"
+        description="Get explanations, meanings, and guidance while reading."
+        icon={Sparkles}
+      />
+    );
+  }
 
   return (
     <TooltipProvider>

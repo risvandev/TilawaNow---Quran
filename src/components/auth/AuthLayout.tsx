@@ -71,11 +71,11 @@ export const AuthLayout = ({ children, title, subtitle, quote }: AuthLayoutProps
         </div>
 
         <div className="flex-1 flex flex-col justify-center max-w-md mx-auto w-full animate-fade-in">
-          <div className="mb-8 md:mb-10">
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-3">
+          <div className="mb-10 md:mb-16">
+            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter text-foreground mb-4 leading-[1.1]">
               {title}
             </h1>
-            <p className="text-muted-foreground text-lg font-light tracking-wide hidden md:block">
+            <p className="text-muted-foreground text-xl font-light tracking-wide max-w-sm">
               {subtitle}
             </p>
           </div>

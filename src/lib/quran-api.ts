@@ -303,7 +303,7 @@ export const fetchTafsir = async (
       resource_name: data.tafsir.resource_name
     };
   } catch (error) {
-    console.error(`Error fetching tafsir for ${verseKey}:`, error);
+    console.error("Error fetching tafsir:", verseKey, error);
     return null;
   }
 };

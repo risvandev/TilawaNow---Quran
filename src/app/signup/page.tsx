@@ -123,17 +123,14 @@ const SignUp = () => {
         >
             <div className="space-y-6">
                 <form onSubmit={handleSubmit} className="space-y-5">
-                    <div className="space-y-2">
-                        <Label htmlFor="name" className="text-sm font-semibold tracking-wide uppercase text-muted-foreground/80">
-                            Full Name
-                        </Label>
+                    <div className="space-y-4">
                         <div className="relative group">
-                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
                             <Input
                                 id="name"
                                 type="text"
-                                placeholder="Your name"
-                                className="pl-10 h-12 bg-secondary/30 border-border/50 focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all rounded-xl"
+                                placeholder="Full Name"
+                                className="pl-12 h-14 bg-secondary/20 border-border/40 focus:bg-background focus:ring-0 transition-all rounded-2xl text-base"
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                 required
@@ -141,17 +138,14 @@ const SignUp = () => {
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="email" className="text-sm font-semibold tracking-wide uppercase text-muted-foreground/80">
-                            Email Address
-                        </Label>
+                    <div className="space-y-4">
                         <div className="relative group">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
                             <Input
                                 id="email"
                                 type="email"
-                                placeholder="name@example.com"
-                                className="pl-10 h-12 bg-secondary/30 border-border/50 focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all rounded-xl"
+                                placeholder="Email Address"
+                                className="pl-12 h-14 bg-secondary/20 border-border/40 focus:bg-background focus:ring-0 transition-all rounded-2xl text-base"
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                 required
@@ -159,17 +153,14 @@ const SignUp = () => {
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="password" className="text-sm font-semibold tracking-wide uppercase text-muted-foreground/80">
-                            Password
-                        </Label>
+                    <div className="space-y-4">
                         <div className="relative group">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
                             <Input
                                 id="password"
                                 type={showPassword ? "text" : "password"}
-                                placeholder="Create a password"
-                                className="pl-10 pr-10 h-12 bg-secondary/30 border-border/50 focus:bg-background focus:ring-2 focus:ring-primary/20 transition-all rounded-xl"
+                                placeholder="Password"
+                                className="pl-12 pr-12 h-14 bg-secondary/20 border-border/40 focus:bg-background focus:ring-0 transition-all rounded-2xl text-base"
                                 value={formData.password}
                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                 required
@@ -178,21 +169,21 @@ const SignUp = () => {
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-foreground transition-colors"
                             >
-                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
                             </button>
                         </div>
                     </div>
 
                     <Button
                         type="submit"
-                        className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all rounded-xl"
+                        className="w-full h-14 text-lg font-bold bg-primary hover:bg-primary/90 shadow-xl shadow-primary/20 transition-all rounded-2xl"
                         disabled={isLoading}
                     >
                         {isLoading ? (
                             <>
-                                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                <Loader2 className="w-5 h-5 mr-3 animate-spin" />
                                 Creating account...
                             </>
                         ) : (

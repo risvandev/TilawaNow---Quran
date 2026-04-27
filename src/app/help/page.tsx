@@ -20,6 +20,9 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
+import { RestrictedAccess } from "@/components/auth/RestrictedAccess";
 import { Footer } from "@/components/layout/Footer";
 
 const faqs = [
@@ -173,9 +176,21 @@ const MessageWithOffers = ({ content, onNavigate }: { content: string, onNavigat
 
 
 const HelpSupport = () => {
+  const { user } = useAuth();
   const navigate = useRouter();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
+
+  if (!user) {
+    return (
+      <RestrictedAccess 
+        title="Support Restricted"
+        description="Sign in to access personalized support and AI assistance."
+        icon={HelpCircle}
+      />
+    );
+  }
+
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
