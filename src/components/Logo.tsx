@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { useTheme } from "next-themes";
 
 interface LogoProps {
     className?: string; // For the container
