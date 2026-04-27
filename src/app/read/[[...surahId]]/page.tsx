@@ -678,7 +678,6 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
     loopMode,
     setLoopMode,
   } = useAudioPlayer();
-  const isMobile = useIsMobile();
 
 
   const { updateReadingHistory, isMarked, toggleMark } = useBookmarks();
