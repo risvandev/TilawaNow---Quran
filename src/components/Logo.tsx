@@ -19,7 +19,6 @@ export const Logo = ({
 }: LogoProps) => {
     const [showArabic, setShowArabic] = useState(false);
     const [isFading, setIsFading] = useState(false);
-    const { resolvedTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
