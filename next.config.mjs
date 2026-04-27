@@ -44,7 +44,7 @@ const nextConfig = {
               "connect-src 'self' https://api.quran.com https://*.supabase.co wss://*.supabase.co https://*.puter.com https://*.puter.io https://api.puter.com https://vitals.vercel-insights.com",
               "font-src 'self' data:",
               "frame-ancestors 'self'",
-              "media-src 'self' https://verses.quran.com https://*.supabase.co",
+              "media-src 'self' blob: data: https://*.quran.com https://*.supabase.co",
               "worker-src 'self' blob:",
               "object-src 'none'",
               "base-uri 'self'",
