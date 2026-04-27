@@ -38,7 +38,7 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'none'",
-              "script-src 'self' https://js.puter.com 'sha256-eMuh8xiwcX72rRYNAGENurQBAcH7kLlAUQcoOri3BIo=' 'sha256-OBTN3RiyCV4Bq7dFqZ5a2pAXjnCcCYeTJMO2I/LYKeo=' 'sha256-ETrgFaZYUbclXp+RIusyBBbH3iq8tpLPb+vSRLlhHJU=' 'sha256-QA56iIyapxf5W9uIM6WkgKrCQzOe4G4v2PloJ0wFzBg=' 'sha256-q/IwJf6mKge10mhZ6gYiCzJeUNBvM2QT8MQKuQISQhc=' 'sha256-lxIb09i92dLGsde3NpBFeo41QHrRDQjuAGobv7OIdPo=' 'sha256-P1WcItQJqorVtHPl5zXOf44dcpPfVA86U1CB5G8E2do=' 'sha256-sWOuLY0rkAoFUUAhx7Fyke+H4LFeVpSQJSeaRvhDyqI=' 'sha256-bGqhlR9C1FbRg9THxbOlKCsufWYXUSTG22R446Hkvkc='",
+              "script-src 'self' https://js.puter.com 'sha256-eMuh8xiwcX72rRYNAGENurQBAcH7kLlAUQcoOri3BIo=' 'sha256-OBTN3RiyCV4Bq7dFqZ5a2pAXjnCcCYeTJMO2I/LYKeo=' 'sha256-ETrgFaZYUbclXp+RIusyBBbH3iq8tpLPb+vSRLlhHJU=' 'sha256-QA56iIyapxf5W9uIM6WkgKrCQzOe4G4v2PloJ0wFzBg=' 'sha256-q/IwJf6mKge10mhZ6gYiCzJeUNBvM2QT8MQKuQISQhc=' 'sha256-lxIb09i92dLGsde3NpBFeo41QHrRDQjuAGobv7OIdPo=' 'sha256-P1WcItQJqorVtHPl5zXOf44dcpPfVA86U1CB5G8E2do=' 'sha256-sWOuLY0rkAoFUUAhx7Fyke+H4LFeVpSQJSeaRvhDyqI=' 'sha256-bGqhlR9C1FbRg9THxbOlKCsufWYXUSTG22R446Hkvkc=' 'sha256-OOdk0BODqbGPofJBL23s8pk+0daOfhEhmGJIb9WFURw='",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://verses.quran.com https://api.quran.com https://raw.githubusercontent.com https://lh3.googleusercontent.com https://*.supabase.co",
               "connect-src 'self' https://api.quran.com https://*.supabase.co wss://*.supabase.co https://*.puter.com https://*.puter.io https://api.puter.com",
