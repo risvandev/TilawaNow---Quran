@@ -935,23 +935,6 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
   
   useEffect(() => {
     if (isMobile && isPlaying && currentWordPosition !== undefined) {
-      requestAnimationFrame(() => {
-        const activeWord = document.getElementById("active-word");
-        if (activeWord) {
-          const rect = activeWord.getBoundingClientRect();
-          const viewportHeight = window.innerHeight;
-          const driftTrigger = viewportHeight * 0.6;
-          const driftTarget = viewportHeight * 0.35;
-
-          if (rect.bottom > driftTrigger || rect.top < viewportHeight * 0.2) {
-            // Mobile auto-drifting disabled
-            /*
-            window.scrollBy({
-              top: rect.top - driftTarget,
-              behavior: "smooth"
-            });
-            */
-          }
         }
       });
     }
