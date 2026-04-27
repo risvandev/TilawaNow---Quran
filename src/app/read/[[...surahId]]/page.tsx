@@ -42,7 +42,6 @@ import {
   usePriorityAudios,
   useUserReadingProfile 
 } from "@/hooks/use-quran-queries";
-import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Tooltip,
   TooltipContent,
