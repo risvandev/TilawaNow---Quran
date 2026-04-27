@@ -933,18 +933,11 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
     }
   }, [surahId, loading, surah, logVerseReading, startSession, prefetchSurahData, translationId, quranScript]);
   
-  useEffect(() => {
-    if (isMobile && isPlaying && currentWordPosition !== undefined) {
-        }
-      });
-    }
-  }, [currentWordPosition, currentVerseKey, isPlaying, isMobile]);
 
   useEffect(() => {
     if (!loading && currentVerseKey && currentVerseKey.startsWith(`${surahId}:`)) {
       const verseIndex = verses.findIndex(v => v.verse_key === currentVerseKey);
       
-      if (verseIndex >= 0) {
       if (verseIndex >= 0 && isPlaying && isAutoScrollEnabled) {
         userScrollingRef.current = true;
         if (virtuosoRef.current) {
@@ -964,7 +957,6 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
         setTimeout(() => {
           userScrollingRef.current = false;
         }, 1000);
-      }
       }
 
       logVerseReading(surahId, currentVerseKey);
@@ -1126,7 +1118,7 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
 
       {surah.id !== 1 && surah.id !== 9 && (
         <div className="text-center mb-10 py-8 cursor-pointer group transition-all duration-300 hover:bg-primary/5 rounded-xl" onClick={() => (new Audio("https://verses.quran.com/Alafasy/mp3/001001.mp3")).play()} title="Tap to listen">
-          <p className="font-arabic text-2xl md:text-3xl lg:text-4xl text-white leading-relaxed group-hover:text-accent transition-colors duration-300">
+          <p className="font-arabic text-2xl md:text-3xl lg:text-4xl text-foreground leading-relaxed group-hover:text-primary transition-colors duration-300">
             بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
           </p>
         </div>
