@@ -38,7 +38,7 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'none'",
-              "script-src 'self' 'unsafe-inline' https://js.puter.com https://va.vercel-scripts.com blob:",
+              `script-src 'self' 'unsafe-inline' ${process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ""} https://js.puter.com https://va.vercel-scripts.com blob:`,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https://verses.quran.com https://api.quran.com https://raw.githubusercontent.com https://lh3.googleusercontent.com https://*.supabase.co",
               "connect-src 'self' https://api.quran.com https://*.supabase.co wss://*.supabase.co https://*.puter.com https://*.puter.io https://api.puter.com https://vitals.vercel-insights.com",
