@@ -400,17 +400,13 @@
   }
 
   .word-highlight {
-    color: hsl(var(--primary-foreground)) !important;
-    background-color: hsl(var(--primary));
-    border-radius: 0.25rem;
-    text-shadow: none;
+    color: hsl(var(--primary)) !important;
+    text-shadow: 0 0 15px hsl(var(--primary) / 0.4);
     position: relative;
     z-index: 10;
-    transition: all 0.1s ease-out;
-    padding: 0 0.15em;
-    margin: 0 -0.15em;
+    transition: color 0.2s ease-out;
+    display: inline;
   }
-
 
   /* Premium Markdown Rendering Styling (Gemini/ChatGPT Style) */
   .markdown-content {

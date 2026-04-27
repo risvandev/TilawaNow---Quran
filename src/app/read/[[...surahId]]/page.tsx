@@ -831,10 +831,13 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
           const driftTarget = viewportHeight * 0.35;
 
           if (rect.bottom > driftTrigger || rect.top < viewportHeight * 0.2) {
+            // Mobile auto-drifting disabled
+            /*
             window.scrollBy({
               top: rect.top - driftTarget,
               behavior: "smooth"
             });
+            */
           }
         }
       });
@@ -846,6 +849,8 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
       const verseIndex = verses.findIndex(v => v.verse_key === currentVerseKey);
       
       if (verseIndex >= 0) {
+        // Auto-scrolling disabled to prevent movement during playback
+        /*
         if (virtuosoRef.current) {
           virtuosoRef.current.scrollToIndex({
             index: verseIndex,
@@ -858,6 +863,7 @@ const SurahReader = ({ surahId }: { surahId: number }) => {
             element.scrollIntoView({ behavior: "smooth", block: "center" });
           }
         }
+        */
       }
 
       logVerseReading(surahId, currentVerseKey);
