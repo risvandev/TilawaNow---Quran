@@ -6,11 +6,6 @@ import Link from "next/link";
 import { fetchSurah, fetchSurahInfo, Surah } from "@/lib/quran-api";
 import { ChevronLeft, Loader2 } from "lucide-react";
 
-interface StructuredInfo {
-    snapshot: string;
-    context: string;
-    tafsir: string;
-}
 const SurahInfoPage = () => {
     const params = useParams();
     const surahId = params?.surahId as string;
